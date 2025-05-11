@@ -75,7 +75,7 @@ const WallpaperList = () => {
   }, [filterStatus, filterCategory]);
 
   const buildQuery = (isInitial: boolean = true) => {
-    let wallpapersQuery: any = collection(db, "wallpapers");
+    let wallpapersQuery = collection(db, "wallpapers");
     
     const queryConstraints = [];
     
