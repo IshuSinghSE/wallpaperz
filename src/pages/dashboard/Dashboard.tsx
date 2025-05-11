@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { collection, getDocs, query, where, orderBy, limit } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -158,7 +157,7 @@ const Dashboard = () => {
                         <tr key={wallpaper.id}>
                           <td className="w-16">
                             <img
-                              src={wallpaper.thumbnailUrl}
+                              src={wallpaper.thumbnail}
                               alt={wallpaper.name}
                               className="h-12 w-12 rounded-md object-cover"
                             />
@@ -179,7 +178,11 @@ const Dashboard = () => {
                           </td>
                           <td>{wallpaper.author}</td>
                           <td>
-                            {wallpaper.createdAt.toDate().toLocaleDateString()}
+                            {wallpaper.createdAt instanceof Date
+                              ? wallpaper.createdAt.toISOString()
+                              : wallpaper.createdAt?.toDate
+                                ? wallpaper.createdAt.toDate().toISOString()
+                                : wallpaper.createdAt.toString().slice(0, 16).replace("T", " ")}
                           </td>
                           <td>
                             <Link

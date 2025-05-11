@@ -7,7 +7,7 @@ export interface Wallpaper {
   id: string;
   name: string;
   imageUrl: string;
-  thumbnailUrl: string;
+  thumbnail: string;
   previewUrl: string;
   blurHash: string;
   downloads: number;

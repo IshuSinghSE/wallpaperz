@@ -75,7 +75,7 @@ const WallpaperList = () => {
   }, [filterStatus, filterCategory]);
 
   const buildQuery = (isInitial: boolean = true) => {
-    let wallpapersQuery = collection(db, "wallpapers");
+    const wallpapersQuery = collection(db, "wallpapers");
     
     const queryConstraints = [];
     
@@ -232,7 +232,7 @@ const WallpaperList = () => {
                 <Card key={wallpaper.id} className="overflow-hidden">
                   <div className="aspect-[3/4] relative">
                     <img
-                      src={wallpaper.thumbnailUrl}
+                      src={wallpaper.thumbnail}
                       alt={wallpaper.name}
                       className="h-full w-full object-cover"
                     />
