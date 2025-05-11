@@ -42,12 +42,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (user) {
         try {
-          const userDoc = await getDoc(doc(db, "users", user.uid));
-          if (userDoc.exists()) {
-            const userData = userDoc.data() as Partial<User>;
-            setUserRole(userData.role || null);
+          // Special case for the specified email
+          if (user.email === "ishu.111636@gmail.com") {
+            console.log("Admin email detected, setting admin role");
+            setUserRole("admin");
           } else {
-            setUserRole(null);
+            const userDoc = await getDoc(doc(db, "users", user.uid));
+            if (userDoc.exists()) {
+              const userData = userDoc.data() as Partial<User>;
+              setUserRole(userData.role || null);
+            } else {
+              setUserRole(null);
+            }
           }
         } catch (error) {
           console.error("Error fetching user role:", error);
@@ -84,7 +90,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const value: AuthContextType = {
     currentUser,
     userRole,
-    isAdmin: userRole === "admin",
+    isAdmin: userRole === "admin" || (currentUser?.email === "ishu.111636@gmail.com"),
     isLoading,
     signInWithGoogle,
     signOut,
