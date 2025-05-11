@@ -5,14 +5,14 @@ import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 // Firebase configuration
-// Replace these placeholders with your actual Firebase config values
 const firebaseConfig = {
-  apiKey: process.env.FIREBASE_API_KEY || "YOUR_API_KEY",
-  authDomain: process.env.FIREBASE_AUTH_DOMAIN || "YOUR_AUTH_DOMAIN",
-  projectId: process.env.FIREBASE_PROJECT_ID || "YOUR_PROJECT_ID",
-  storageBucket: process.env.FIREBASE_STORAGE_BUCKET || "YOUR_STORAGE_BUCKET",
-  messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID || "YOUR_MESSAGING_SENDER_ID",
-  appId: process.env.FIREBASE_APP_ID || "YOUR_APP_ID"
+  apiKey: "AIzaSyCcsvlpW-8Zqv21Kj8nXZNgyLGbEjsCxyY",
+  authDomain: "roomdesign-7.firebaseapp.com",
+  projectId: "roomdesign-7",
+  storageBucket: "roomdesign-7.appspot.com",
+  messagingSenderId: "1035240251094",
+  appId: "1:1035240251094:web:fb54507aeff3568699b377",
+  measurementId: "G-1H75QFL3Y5"
 };
 
 // Check if configuration contains actual values
