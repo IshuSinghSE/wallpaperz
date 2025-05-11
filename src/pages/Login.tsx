@@ -4,11 +4,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertTriangle } from "lucide-react";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 const Login = () => {
   const { currentUser, signInWithGoogle, isAdmin } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [showConfigAlert, setShowConfigAlert] = useState(false);
   const { toast } = useToast();
 
   const handleGoogleSignIn = async () => {
@@ -20,6 +22,13 @@ const Login = () => {
         description: "Welcome to the Admin Dashboard!"
       });
     } catch (error: any) {
+      console.error("Error signing in with Google:", error);
+      
+      // Show Firebase config alert if the error is related to API key
+      if (error.code === "auth/api-key-not-valid.-please-pass-a-valid-api-key.") {
+        setShowConfigAlert(true);
+      }
+      
       toast({
         title: "Authentication failed",
         description: error.message || "There was a problem signing in. Please try again.",
@@ -47,6 +56,16 @@ const Login = () => {
             Sign in to access the wallpaper management dashboard
           </p>
         </div>
+
+        {showConfigAlert && (
+          <Alert variant="destructive" className="mb-6">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>Firebase Configuration Error</AlertTitle>
+            <AlertDescription>
+              The Firebase API keys are invalid or missing. You need to update the Firebase configuration in src/lib/firebase.ts with your actual Firebase project credentials.
+            </AlertDescription>
+          </Alert>
+        )}
 
         <div className="flex flex-col space-y-4">
           <Button
