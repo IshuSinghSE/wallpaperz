@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -13,6 +14,7 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Wallpaper, WallpaperStatus } from "@/types";
+import { search } from "@/lib/search";
 import { 
   Card, 
   CardContent, 
@@ -30,8 +32,9 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { Check, X, Edit, Loader2, Search } from "lucide-react";
+import { Check, X, Edit, Loader2, Search, Download, Filter } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
 
 const ITEMS_PER_PAGE = 20;
 
@@ -45,6 +48,7 @@ const WallpaperList = () => {
   const [filterCategory, setFilterCategory] = useState<string>("all");
   const [categories, setCategories] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -137,19 +141,103 @@ const WallpaperList = () => {
     }
   };
 
-  const loadMore = () => {
-    if (!loading && hasMore) {
-      loadWallpapers();
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!searchTerm.trim()) {
+      // If search is cleared, reset to normal view
+      setWallpapers([]);
+      setLastVisible(null);
+      setHasMore(true);
+      loadWallpapers(true);
+      return;
+    }
+    
+    try {
+      setIsSearching(true);
+      setLoading(true);
+
+      // Use our search utility
+      const filters: Record<string, any> = {};
+      if (filterStatus !== "all") filters.status = filterStatus;
+      if (filterCategory !== "all") filters.category = filterCategory;
+      
+      const result = await search<Wallpaper>({
+        collection: "wallpapers",
+        searchTerm: searchTerm.trim(),
+        filters,
+        sortField: "createdAt",
+        sortDirection: "desc",
+        pageSize: ITEMS_PER_PAGE
+      });
+      
+      setWallpapers(result.items);
+      setLastVisible(result.lastVisible);
+      setHasMore(result.hasMore);
+      
+      if (result.items.length === 0) {
+        toast({
+          title: "No results found",
+          description: `No wallpapers matching "${searchTerm}" were found.`,
+        });
+      }
+    } catch (error) {
+      console.error("Error searching wallpapers:", error);
+      toast({
+        title: "Search error",
+        description: "Failed to search wallpapers. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+      setIsSearching(false);
     }
   };
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    // In a real app, you would implement search functionality here
-    toast({
-      title: "Search not implemented",
-      description: "This feature would require a full-text search solution like Algolia or Firebase Extensions.",
-    });
+  const handleSearchMoreResults = async () => {
+    if (!searchTerm.trim() || !lastVisible || !hasMore || loading) return;
+    
+    try {
+      setLoading(true);
+      
+      // Use our search utility with lastVisible for pagination
+      const filters: Record<string, any> = {};
+      if (filterStatus !== "all") filters.status = filterStatus;
+      if (filterCategory !== "all") filters.category = filterCategory;
+      
+      const result = await search<Wallpaper>({
+        collection: "wallpapers",
+        searchTerm: searchTerm.trim(),
+        filters,
+        sortField: "createdAt",
+        sortDirection: "desc",
+        pageSize: ITEMS_PER_PAGE,
+        lastVisible
+      });
+      
+      setWallpapers(prev => [...prev, ...result.items]);
+      setLastVisible(result.lastVisible);
+      setHasMore(result.hasMore);
+    } catch (error) {
+      console.error("Error searching more wallpapers:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load more search results.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadMore = () => {
+    if (!loading && hasMore) {
+      if (searchTerm.trim()) {
+        handleSearchMoreResults();
+      } else {
+        loadWallpapers();
+      }
+    }
   };
 
   const handleViewWallpaper = (id: string) => {
@@ -171,6 +259,14 @@ const WallpaperList = () => {
     }
   };
 
+  const resetSearch = () => {
+    setSearchTerm("");
+    setWallpapers([]);
+    setLastVisible(null);
+    setHasMore(true);
+    loadWallpapers(true);
+  };
+
   return (
     <div className="animate-fade-in space-y-6">
       <div>
@@ -184,45 +280,67 @@ const WallpaperList = () => {
           <Input
             type="text"
             placeholder="Search by name, tag, or author..."
-            className="pl-10"
+            className="pl-10 backdrop-blur-sm bg-white/10 border border-white/20 shadow-lg"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
+          {searchTerm && (
+            <Button 
+              type="button" 
+              variant="ghost" 
+              size="icon" 
+              className="absolute right-2 top-1/2 -translate-y-1/2" 
+              onClick={resetSearch}
+              aria-label="Clear search"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
         </form>
 
         <div className="flex gap-2">
-          <Select
-            value={filterStatus}
-            onValueChange={(value) => setFilterStatus(value as WallpaperStatus | "all")}
-          >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Filter by status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="approved">Approved</SelectItem>
-              <SelectItem value="rejected">Rejected</SelectItem>
-              <SelectItem value="hidden">Hidden</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="relative group">
+            <Select
+              value={filterStatus}
+              onValueChange={(value) => setFilterStatus(value as WallpaperStatus | "all")}
+            >
+              <SelectTrigger className="w-[180px] backdrop-blur-sm bg-white/10 border border-white/20 shadow-lg">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent className="backdrop-blur-md bg-white/70 dark:bg-slate-900/70 border border-white/20">
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="approved">Approved</SelectItem>
+                <SelectItem value="rejected">Rejected</SelectItem>
+                <SelectItem value="hidden">Hidden</SelectItem>
+              </SelectContent>
+            </Select>
+            <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <Badge className="bg-primary/80 text-xs">Status</Badge>
+            </div>
+          </div>
 
-          <Select
-            value={filterCategory}
-            onValueChange={setFilterCategory}
-          >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Filter by category" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
-              {categories.map((category) => (
-                <SelectItem key={category} value={category}>
-                  {category}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="relative group">
+            <Select
+              value={filterCategory}
+              onValueChange={setFilterCategory}
+            >
+              <SelectTrigger className="w-[180px] backdrop-blur-sm bg-white/10 border border-white/20 shadow-lg">
+                <SelectValue placeholder="Filter by category" />
+              </SelectTrigger>
+              <SelectContent className="backdrop-blur-md bg-white/70 dark:bg-slate-900/70 border border-white/20">
+                <SelectItem value="all">All Categories</SelectItem>
+                {categories.map((category) => (
+                  <SelectItem key={category} value={category}>
+                    {category}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <Badge className="bg-primary/80 text-xs">Category</Badge>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -238,7 +356,7 @@ const WallpaperList = () => {
               {wallpapers.map((wallpaper) => (
                 <Card 
                   key={wallpaper.id} 
-                  className="overflow-hidden shadow-md border border-slate-100 dark:border-slate-800 transition-transform hover:scale-[1.02] cursor-pointer"
+                  className="overflow-hidden shadow-xl border border-white/20 dark:border-slate-800/50 backdrop-blur-sm bg-white/10 dark:bg-slate-900/20 transition-all hover:scale-[1.02] hover:shadow-2xl hover:shadow-primary/10 cursor-pointer"
                   onClick={() => handleViewWallpaper(wallpaper.id)}
                 >
                   <div className="aspect-[3/4] relative">
@@ -246,12 +364,13 @@ const WallpaperList = () => {
                       src={wallpaper.thumbnail}
                       alt={wallpaper.name}
                       className="h-full w-full object-cover"
+                      loading="lazy"
                     />
                     <div className="absolute top-2 right-2">
                       <span
                         className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusBadgeClass(
                           wallpaper.status
-                        )}`}
+                        )} shadow-md`}
                       >
                         {wallpaper.status}
                       </span>
@@ -268,13 +387,13 @@ const WallpaperList = () => {
                       {wallpaper.tags.slice(0, 3).map((tag, i) => (
                         <span
                           key={i}
-                          className="inline-block rounded-full bg-muted px-2 py-1 text-xs"
+                          className="inline-block rounded-full bg-primary/10 backdrop-blur-sm px-2 py-1 text-xs"
                         >
                           {tag}
                         </span>
                       ))}
                       {wallpaper.tags.length > 3 && (
-                        <span className="inline-block rounded-full bg-muted px-2 py-1 text-xs">
+                        <span className="inline-block rounded-full bg-primary/10 backdrop-blur-sm px-2 py-1 text-xs">
                           +{wallpaper.tags.length - 3} more
                         </span>
                       )}
@@ -286,17 +405,17 @@ const WallpaperList = () => {
                         e.stopPropagation();
                         handleViewWallpaper(wallpaper.id);
                       }}
-                      className="inline-flex h-9 items-center justify-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 disabled:pointer-events-none disabled:opacity-50"
+                      className="inline-flex h-9 items-center justify-center rounded-md bg-primary/80 backdrop-blur-sm px-3 text-sm font-medium text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:bg-primary focus-visible:outline-none focus-visible:ring-1"
                     >
                       <Edit className="mr-2 h-4 w-4" /> Edit
                     </Button>
                     {wallpaper.status === "pending" && (
                       <div className="flex gap-2">
-                        <Button size="sm" variant="outline" className="flex-1 px-2">
+                        <Button size="sm" variant="outline" className="flex-1 px-2 shadow-md backdrop-blur-sm bg-white/10 border-white/20">
                           <Check className="mr-1 h-4 w-4 text-emerald-500" />{" "}
                           Approve
                         </Button>
-                        <Button size="sm" variant="outline" className="flex-1 px-2">
+                        <Button size="sm" variant="outline" className="flex-1 px-2 shadow-md backdrop-blur-sm bg-white/10 border-white/20">
                           <X className="mr-1 h-4 w-4 text-rose-500" />{" "}
                           Reject
                         </Button>
@@ -307,7 +426,7 @@ const WallpaperList = () => {
               ))}
             </div>
           ) : (
-            <div className="flex h-64 flex-col items-center justify-center rounded-lg border border-dashed">
+            <div className="flex h-64 flex-col items-center justify-center rounded-lg border border-dashed border-white/20 backdrop-blur-sm bg-white/5 dark:bg-slate-900/10">
               <p className="text-muted-foreground">No wallpapers found</p>
               <p className="text-sm text-muted-foreground">
                 Try changing your filters or upload a new wallpaper
@@ -320,7 +439,7 @@ const WallpaperList = () => {
               <Button
                 onClick={loadMore}
                 disabled={loading}
-                className="min-w-[200px]"
+                className="min-w-[200px] shadow-lg shadow-primary/10 backdrop-blur-sm bg-primary/80"
               >
                 {loading ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

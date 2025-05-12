@@ -2,13 +2,14 @@
 import { Timestamp } from "firebase/firestore";
 
 export type WallpaperStatus = "pending" | "approved" | "rejected" | "hidden";
+export type AuthProvider = "google" | "apple" | "email";
 
 export interface Wallpaper {
   id: string;
   name: string;
-  image: string;       // Changed from imageUrl
-  thumbnail: string;   // Changed from thumbnailUrl
-  preview: string;     // Changed from previewUrl
+  image: string;
+  thumbnail: string;
+  preview: string;
   blurHash: string;
   downloads: number;
   likes: number;
@@ -37,7 +38,9 @@ export interface Category {
   id: string;
   name: string;
   description?: string;
+  iconUrl?: string;
   wallpaperCount: number;
+  createdAt: Timestamp;
 }
 
 export interface Collection {
@@ -45,7 +48,11 @@ export interface Collection {
   name: string;
   description?: string;
   wallpaperIds: string[];
-  thumbnailUrl?: string;
+  coverImage?: string;
+  createdBy: string;
+  tags?: string[];
+  type?: "manual" | "auto";
+  createdAt: Timestamp;
 }
 
 export interface User {
@@ -54,4 +61,10 @@ export interface User {
   displayName: string;
   photoURL: string;
   role: "admin" | "user";
+  savedWallpapers?: string[];
+  uploadedWallpapers?: string[];
+  isPremium?: boolean;
+  premiumPurchasedAt?: Timestamp;
+  authProvider?: AuthProvider;
+  createdAt?: Timestamp;
 }
