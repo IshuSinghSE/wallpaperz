@@ -13,6 +13,8 @@ import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import Dashboard from "@/pages/dashboard/Dashboard";
 import WallpaperList from "@/pages/dashboard/WallpaperList";
 import WallpaperUpload from "@/pages/dashboard/WallpaperUpload";
+import WallpaperDetails from "@/pages/dashboard/WallpaperDetails";
+import PendingApproval from "@/pages/dashboard/PendingApproval";
 
 // Auth Pages
 import Login from "@/pages/Login";
@@ -37,9 +39,10 @@ const App = () => (
               <Route element={<DashboardLayout />}>
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/dashboard/wallpapers" element={<WallpaperList />} />
+                <Route path="/dashboard/wallpapers/:id" element={<WallpaperDetails />} />
                 <Route path="/dashboard/upload" element={<WallpaperUpload />} />
+                <Route path="/dashboard/pending" element={<PendingApproval />} />
                 {/* Add other dashboard routes as they are developed */}
-                <Route path="/dashboard/pending" element={<div>Pending Approval (Coming Soon)</div>} />
                 <Route path="/dashboard/categories" element={<div>Categories (Coming Soon)</div>} />
                 <Route path="/dashboard/collections" element={<div>Collections (Coming Soon)</div>} />
                 <Route path="/dashboard/users" element={<div>Users (Coming Soon)</div>} />

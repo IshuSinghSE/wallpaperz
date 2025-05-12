@@ -1,6 +1,5 @@
-
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   collection,
   getDocs,
@@ -37,6 +36,7 @@ import { useToast } from "@/hooks/use-toast";
 const ITEMS_PER_PAGE = 20;
 
 const WallpaperList = () => {
+  const navigate = useNavigate();
   const [wallpapers, setWallpapers] = useState<Wallpaper[]>([]);
   const [loading, setLoading] = useState(true);
   const [lastVisible, setLastVisible] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
@@ -152,6 +152,10 @@ const WallpaperList = () => {
     });
   };
 
+  const handleViewWallpaper = (id: string) => {
+    navigate(`/dashboard/wallpapers/${id}`);
+  };
+
   const getStatusBadgeClass = (status: WallpaperStatus) => {
     switch (status) {
       case "approved":
@@ -160,6 +164,8 @@ const WallpaperList = () => {
         return "bg-amber-50 text-amber-700";
       case "rejected":
         return "bg-rose-50 text-rose-700";
+      case "hidden":
+        return "bg-gray-50 text-gray-700";
       default:
         return "bg-gray-50 text-gray-700";
     }
@@ -197,6 +203,7 @@ const WallpaperList = () => {
               <SelectItem value="pending">Pending</SelectItem>
               <SelectItem value="approved">Approved</SelectItem>
               <SelectItem value="rejected">Rejected</SelectItem>
+              <SelectItem value="hidden">Hidden</SelectItem>
             </SelectContent>
           </Select>
 
@@ -229,7 +236,11 @@ const WallpaperList = () => {
           {wallpapers.length > 0 ? (
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {wallpapers.map((wallpaper) => (
-                <Card key={wallpaper.id} className="overflow-hidden">
+                <Card 
+                  key={wallpaper.id} 
+                  className="overflow-hidden shadow-md border border-slate-100 dark:border-slate-800 transition-transform hover:scale-[1.02] cursor-pointer"
+                  onClick={() => handleViewWallpaper(wallpaper.id)}
+                >
                   <div className="aspect-[3/4] relative">
                     <img
                       src={wallpaper.thumbnail}
@@ -269,13 +280,16 @@ const WallpaperList = () => {
                       )}
                     </div>
                   </CardContent>
-                  <CardFooter className="flex justify-between gap-2 p-4 pt-0">
-                    <Link
-                      to={`/dashboard/wallpapers/${wallpaper.id}`}
+                  <CardFooter className="flex justify-between gap-2 p-4 pt-0" onClick={(e) => e.stopPropagation()}>
+                    <Button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleViewWallpaper(wallpaper.id);
+                      }}
                       className="inline-flex h-9 items-center justify-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 disabled:pointer-events-none disabled:opacity-50"
                     >
                       <Edit className="mr-2 h-4 w-4" /> Edit
-                    </Link>
+                    </Button>
                     {wallpaper.status === "pending" && (
                       <div className="flex gap-2">
                         <Button size="sm" variant="outline" className="flex-1 px-2">

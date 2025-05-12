@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { collection, getDocs, query, where, orderBy, limit } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -92,18 +93,20 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Pending Approval</CardTitle>
-            <Clock className="h-4 w-4 text-amber-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{pendingCount}</div>
-            <p className="text-xs text-muted-foreground">
-              Awaiting moderation
-            </p>
-          </CardContent>
-        </Card>
+        <Link to="/dashboard/pending">
+          <Card className="hover:bg-muted/10 transition-colors cursor-pointer h-full">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Pending Approval</CardTitle>
+              <Clock className="h-4 w-4 text-amber-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{pendingCount}</div>
+              <p className="text-xs text-muted-foreground">
+                Awaiting moderation
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -156,13 +159,19 @@ const Dashboard = () => {
                       {recentWallpapers.map((wallpaper) => (
                         <tr key={wallpaper.id}>
                           <td className="w-16">
-                            <img
-                              src={wallpaper.thumbnail}
-                              alt={wallpaper.name}
-                              className="h-12 w-12 rounded-md object-cover"
-                            />
+                            <Link to={`/dashboard/wallpapers/${wallpaper.id}`}>
+                              <img
+                                src={wallpaper.thumbnail}
+                                alt={wallpaper.name}
+                                className="h-12 w-12 rounded-md object-cover"
+                              />
+                            </Link>
                           </td>
-                          <td>{wallpaper.name}</td>
+                          <td>
+                            <Link to={`/dashboard/wallpapers/${wallpaper.id}`} className="hover:underline">
+                              {wallpaper.name}
+                            </Link>
+                          </td>
                           <td>
                             <span
                               className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
@@ -170,6 +179,8 @@ const Dashboard = () => {
                                   ? "bg-emerald-50 text-emerald-700"
                                   : wallpaper.status === "pending"
                                   ? "bg-amber-50 text-amber-700"
+                                  : wallpaper.status === "hidden"
+                                  ? "bg-slate-50 text-slate-700"
                                   : "bg-rose-50 text-rose-700"
                               }`}
                             >

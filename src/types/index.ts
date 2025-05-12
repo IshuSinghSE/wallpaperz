@@ -1,7 +1,7 @@
 
 import { Timestamp } from "firebase/firestore";
 
-export type WallpaperStatus = "pending" | "approved" | "rejected";
+export type WallpaperStatus = "pending" | "approved" | "rejected" | "hidden";
 
 export interface Wallpaper {
   id: string;
