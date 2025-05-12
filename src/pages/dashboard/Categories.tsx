@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { collection, getDocs, doc, setDoc, addDoc, deleteDoc, updateDoc, query, orderBy, limit, startAfter, QueryDocumentSnapshot, DocumentData } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -68,16 +67,23 @@ const Categories = () => {
         setLastVisible(null);
       }
       
-      const queryConstraints = [
-        orderBy("name"),
-        limit(ITEMS_PER_PAGE)
-      ];
+      let q;
       
       if (!isInitial && lastVisible) {
-        queryConstraints.push(startAfter(lastVisible));
+        q = query(
+          collection(db, "categories"),
+          orderBy("name"),
+          startAfter(lastVisible),
+          limit(ITEMS_PER_PAGE)
+        );
+      } else {
+        q = query(
+          collection(db, "categories"),
+          orderBy("name"),
+          limit(ITEMS_PER_PAGE)
+        );
       }
       
-      const q = query(collection(db, "categories"), ...queryConstraints);
       const querySnapshot = await getDocs(q);
       
       if (querySnapshot.empty) {

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
   collection,
@@ -10,6 +9,7 @@ import {
   orderBy,
   limit,
   startAfter,
+  where,
   QueryDocumentSnapshot,
   DocumentData
 } from "firebase/firestore";
@@ -79,7 +79,8 @@ const Users = () => {
       let queryConstraints = [];
       
       if (filterRole !== "all") {
-        queryConstraints.push(orderBy("role"), where("role", "==", filterRole));
+        queryConstraints.push(orderBy("role"));
+        queryConstraints.push(where("role", "==", filterRole));
       } else {
         queryConstraints.push(orderBy("role"));
       }

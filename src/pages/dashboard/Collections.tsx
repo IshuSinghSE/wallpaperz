@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
   collection,
@@ -79,16 +78,23 @@ const Collections = () => {
         setLastVisible(null);
       }
       
-      const queryConstraints = [
-        orderBy("createdAt", "desc"),
-        limit(ITEMS_PER_PAGE)
-      ];
+      let q;
       
       if (!isInitial && lastVisible) {
-        queryConstraints.push(startAfter(lastVisible));
+        q = query(
+          collection(db, "collections"),
+          orderBy("createdAt", "desc"),
+          startAfter(lastVisible),
+          limit(ITEMS_PER_PAGE)
+        );
+      } else {
+        q = query(
+          collection(db, "collections"),
+          orderBy("createdAt", "desc"),
+          limit(ITEMS_PER_PAGE)
+        );
       }
       
-      const q = query(collection(db, "collections"), ...queryConstraints);
       const querySnapshot = await getDocs(q);
       
       if (querySnapshot.empty) {
