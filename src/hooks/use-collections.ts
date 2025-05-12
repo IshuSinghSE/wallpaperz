@@ -43,17 +43,19 @@ export const useCollections = () => {
       }
       
       let q;
+      const collectionRef = collection(db, "collections");
       
       if (!isInitial && lastVisible) {
+        // Use direct arguments instead of spread operator
         q = query(
-          collection(db, "collections"),
+          collectionRef,
           orderBy("createdAt", "desc"),
           startAfter(lastVisible),
           limit(ITEMS_PER_PAGE)
         );
       } else {
         q = query(
-          collection(db, "collections"),
+          collectionRef,
           orderBy("createdAt", "desc"),
           limit(ITEMS_PER_PAGE)
         );

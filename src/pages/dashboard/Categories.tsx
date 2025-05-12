@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { collection, getDocs, doc, setDoc, addDoc, deleteDoc, updateDoc, query, orderBy, limit, startAfter, QueryDocumentSnapshot, DocumentData } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -68,17 +69,19 @@ const Categories = () => {
       }
       
       let q;
+      const categoriesCollection = collection(db, "categories");
       
       if (!isInitial && lastVisible) {
+        // Fix: Use direct parameters instead of spread operator
         q = query(
-          collection(db, "categories"),
+          categoriesCollection,
           orderBy("name"),
           startAfter(lastVisible),
           limit(ITEMS_PER_PAGE)
         );
       } else {
         q = query(
-          collection(db, "categories"),
+          categoriesCollection,
           orderBy("name"),
           limit(ITEMS_PER_PAGE)
         );
