@@ -6,9 +6,9 @@ export type WallpaperStatus = "pending" | "approved" | "rejected" | "hidden";
 export interface Wallpaper {
   id: string;
   name: string;
-  imageUrl: string;
-  thumbnail: string;
-  previewUrl: string;
+  image: string;       // Changed from imageUrl
+  thumbnail: string;   // Changed from thumbnailUrl
+  preview: string;     // Changed from previewUrl
   blurHash: string;
   downloads: number;
   likes: number;

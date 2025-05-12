@@ -26,9 +26,24 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Edit, Trash2, ArrowUp, ArrowDown, Check, X } from "lucide-react";
+import { Edit, Trash2, ArrowUp, ArrowDown, Check, X, Download, Replace } from "lucide-react";
 import { format } from "date-fns";
+import { 
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage 
+} from "@/components/ui/form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
 
 const WallpaperDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -39,10 +54,6 @@ const WallpaperDetails = () => {
   const [currentTab, setCurrentTab] = useState("thumbnail");
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [editedName, setEditedName] = useState("");
-  const [editedDescription, setEditedDescription] = useState("");
-  const [editedTags, setEditedTags] = useState<string[]>([]);
-  const [editedStatus, setEditedStatus] = useState<WallpaperStatus>("pending");
   const [updatingStatus, setUpdatingStatus] = useState(false);
 
   useEffect(() => {
@@ -56,11 +67,16 @@ const WallpaperDetails = () => {
         
         if (docSnap.exists()) {
           const data = { id: docSnap.id, ...docSnap.data() } as Wallpaper;
+          
+          // Handle legacy field names if needed
+          if (!data.image && (data as any).imageUrl) {
+            data.image = (data as any).imageUrl;
+          }
+          if (!data.preview && (data as any).previewUrl) {
+            data.preview = (data as any).previewUrl;
+          }
+          
           setWallpaper(data);
-          setEditedName(data.name);
-          setEditedDescription(data.description);
-          setEditedTags(data.tags);
-          setEditedStatus(data.status);
         } else {
           toast({
             title: "Error",
@@ -83,6 +99,82 @@ const WallpaperDetails = () => {
 
     fetchWallpaper();
   }, [id, navigate, toast]);
+
+  // Define the form schema
+  const formSchema = z.object({
+    name: z.string().min(2, "Name must be at least 2 characters"),
+    image: z.string().url("Must be a valid URL"),
+    preview: z.string().url("Must be a valid URL"),
+    thumbnail: z.string().url("Must be a valid URL"),
+    description: z.string().optional(),
+    author: z.string().min(1, "Author is required"),
+    authorImage: z.string().url("Must be a valid URL"),
+    category: z.string().min(1, "Category is required"),
+    tags: z.array(z.string()),
+    colors: z.array(z.string()),
+    resolution: z.string().min(1, "Resolution is required"),
+    size: z.number().positive("Size must be positive"),
+    aspectRatio: z.number().positive("Aspect ratio must be positive"),
+    orientation: z.string().min(1, "Orientation is required"),
+    license: z.string().optional(),
+    isPremium: z.boolean(),
+    isAIgenerated: z.boolean(),
+    hash: z.string().optional(),
+    status: z.enum(["pending", "approved", "rejected", "hidden"]),
+  });
+
+  // Initialize the form
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: wallpaper?.name || "",
+      image: wallpaper?.image || "",
+      preview: wallpaper?.preview || "",
+      thumbnail: wallpaper?.thumbnail || "",
+      description: wallpaper?.description || "",
+      author: wallpaper?.author || "",
+      authorImage: wallpaper?.authorImage || "",
+      category: wallpaper?.category || "",
+      tags: wallpaper?.tags || [],
+      colors: wallpaper?.colors || [],
+      resolution: wallpaper?.resolution || "",
+      size: wallpaper?.size || 0,
+      aspectRatio: wallpaper?.aspectRatio || 0,
+      orientation: wallpaper?.orientation || "",
+      license: wallpaper?.license || "",
+      isPremium: wallpaper?.isPremium || false,
+      isAIgenerated: wallpaper?.isAIgenerated || false,
+      hash: wallpaper?.hash || "",
+      status: wallpaper?.status || "pending",
+    }
+  });
+
+  // Update form values when wallpaper data is loaded
+  useEffect(() => {
+    if (wallpaper) {
+      form.reset({
+        name: wallpaper.name,
+        image: wallpaper.image,
+        preview: wallpaper.preview,
+        thumbnail: wallpaper.thumbnail,
+        description: wallpaper.description,
+        author: wallpaper.author,
+        authorImage: wallpaper.authorImage,
+        category: wallpaper.category,
+        tags: wallpaper.tags,
+        colors: wallpaper.colors,
+        resolution: wallpaper.resolution,
+        size: wallpaper.size,
+        aspectRatio: wallpaper.aspectRatio,
+        orientation: wallpaper.orientation,
+        license: wallpaper.license,
+        isPremium: wallpaper.isPremium,
+        isAIgenerated: wallpaper.isAIgenerated,
+        hash: wallpaper.hash,
+        status: wallpaper.status,
+      });
+    }
+  }, [wallpaper, form]);
 
   const handleStatusChange = async (newStatus: WallpaperStatus) => {
     if (!wallpaper || !id) return;
@@ -114,21 +206,17 @@ const WallpaperDetails = () => {
     }
   };
 
-  const handleSaveEdit = async () => {
+  const handleSaveEdit = async (data: z.infer<typeof formSchema>) => {
     if (!wallpaper || !id) return;
     
     try {
       await updateDoc(doc(db, "wallpapers", id), {
-        name: editedName,
-        description: editedDescription,
-        tags: editedTags,
+        ...data,
       });
       
       setWallpaper({
         ...wallpaper,
-        name: editedName,
-        description: editedDescription,
-        tags: editedTags,
+        ...data,
       });
       
       toast({
@@ -165,6 +253,39 @@ const WallpaperDetails = () => {
         title: "Error",
         description: "Failed to delete wallpaper",
         variant: "destructive",
+      });
+    }
+  };
+
+  const handleDownload = () => {
+    if (!wallpaper) return;
+    
+    let downloadUrl = wallpaper.image;
+    if (currentTab === "preview") {
+      downloadUrl = wallpaper.preview;
+    } else if (currentTab === "thumbnail") {
+      downloadUrl = wallpaper.thumbnail;
+    }
+    
+    // Create a temporary link element and trigger download
+    const link = document.createElement("a");
+    link.href = downloadUrl;
+    link.download = `${wallpaper.name}.jpg`; // Assuming jpg, might need to be determined from the URL
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // Update download count in Firebase
+    if (id) {
+      updateDoc(doc(db, "wallpapers", id), {
+        downloads: (wallpaper.downloads || 0) + 1
+      }).then(() => {
+        setWallpaper({
+          ...wallpaper,
+          downloads: (wallpaper.downloads || 0) + 1
+        });
+      }).catch(error => {
+        console.error("Failed to update download count:", error);
       });
     }
   };
@@ -219,6 +340,12 @@ const WallpaperDetails = () => {
     );
   }
 
+  const currentImage = currentTab === "thumbnail" 
+    ? wallpaper.thumbnail 
+    : currentTab === "preview" 
+      ? wallpaper.preview 
+      : wallpaper.image;
+
   return (
     <div className="animate-fade-in space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -242,7 +369,7 @@ const WallpaperDetails = () => {
                 <Edit className="mr-2 h-4 w-4" /> Edit
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px]">
+            <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Edit Wallpaper</DialogTitle>
                 <DialogDescription>
@@ -250,52 +377,389 @@ const WallpaperDetails = () => {
                 </DialogDescription>
               </DialogHeader>
               
-              <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <label htmlFor="name" className="text-sm font-medium">
-                    Name
-                  </label>
-                  <input
-                    id="name"
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    value={editedName}
-                    onChange={(e) => setEditedName(e.target.value)}
-                  />
-                </div>
-                
-                <div className="grid gap-2">
-                  <label htmlFor="description" className="text-sm font-medium">
-                    Description
-                  </label>
-                  <Textarea
-                    id="description"
-                    value={editedDescription}
-                    onChange={(e) => setEditedDescription(e.target.value)}
-                    rows={4}
-                  />
-                </div>
-                
-                <div className="grid gap-2">
-                  <label htmlFor="tags" className="text-sm font-medium">
-                    Tags (comma separated)
-                  </label>
-                  <input
-                    id="tags"
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    value={editedTags.join(", ")}
-                    onChange={(e) => 
-                      setEditedTags(e.target.value.split(",").map(tag => tag.trim()).filter(Boolean))
-                    }
-                  />
-                </div>
-              </div>
-              
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button onClick={handleSaveEdit}>Save Changes</Button>
-              </DialogFooter>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(handleSaveEdit)} className="space-y-4 py-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Name</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Wallpaper name" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="author"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Author</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Author name" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="image"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Original Image URL</FormLabel>
+                          <FormControl>
+                            <Input placeholder="https://example.com/image.jpg" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="preview"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Preview Image URL</FormLabel>
+                          <FormControl>
+                            <Input placeholder="https://example.com/preview.jpg" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="thumbnail"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Thumbnail URL</FormLabel>
+                          <FormControl>
+                            <Input placeholder="https://example.com/thumbnail.jpg" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="authorImage"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Author Image URL</FormLabel>
+                          <FormControl>
+                            <Input placeholder="https://example.com/author.jpg" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="category"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Category</FormLabel>
+                          <Select 
+                            value={field.value} 
+                            onValueChange={field.onChange}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select a category" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="nature">Nature</SelectItem>
+                              <SelectItem value="architecture">Architecture</SelectItem>
+                              <SelectItem value="animals">Animals</SelectItem>
+                              <SelectItem value="abstract">Abstract</SelectItem>
+                              <SelectItem value="technology">Technology</SelectItem>
+                              <SelectItem value="cityscape">Cityscape</SelectItem>
+                              <SelectItem value="people">People</SelectItem>
+                              <SelectItem value="travel">Travel</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="resolution"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Resolution</FormLabel>
+                          <FormControl>
+                            <Input placeholder="1920x1080" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="size"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Size (bytes)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              placeholder="File size in bytes"
+                              {...field}
+                              onChange={e => field.onChange(Number(e.target.value))}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="aspectRatio"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Aspect Ratio</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number"
+                              step="0.01"
+                              placeholder="1.77"
+                              {...field}
+                              onChange={e => field.onChange(Number(e.target.value))}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="orientation"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Orientation</FormLabel>
+                          <Select 
+                            value={field.value} 
+                            onValueChange={field.onChange}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select orientation" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="landscape">Landscape</SelectItem>
+                              <SelectItem value="portrait">Portrait</SelectItem>
+                              <SelectItem value="square">Square</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="license"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>License</FormLabel>
+                          <Select 
+                            value={field.value} 
+                            onValueChange={field.onChange}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select license" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="standard">Standard License</SelectItem>
+                              <SelectItem value="cc0">CC0</SelectItem>
+                              <SelectItem value="cc-by">CC-BY</SelectItem>
+                              <SelectItem value="cc-by-nc">CC-BY-NC</SelectItem>
+                              <SelectItem value="commercial">Commercial</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="status"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Status</FormLabel>
+                          <Select 
+                            value={field.value} 
+                            onValueChange={field.onChange}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select status" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="pending">Pending</SelectItem>
+                              <SelectItem value="approved">Approved</SelectItem>
+                              <SelectItem value="rejected">Rejected</SelectItem>
+                              <SelectItem value="hidden">Hidden</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="hash"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Hash</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Image hash" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-1 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="description"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Description</FormLabel>
+                          <FormControl>
+                            <Textarea placeholder="Describe this wallpaper" className="min-h-[100px]" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="tags"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Tags (comma separated)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="nature, mountains, sunset"
+                              value={field.value.join(", ")}
+                              onChange={(e) => {
+                                const tags = e.target.value
+                                  .split(",")
+                                  .map(tag => tag.trim())
+                                  .filter(Boolean);
+                                field.onChange(tags);
+                              }}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="colors"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Colors (hex codes, comma separated)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="#ff0000, #00ff00, #0000ff"
+                              value={field.value.join(", ")}
+                              onChange={(e) => {
+                                const colors = e.target.value
+                                  .split(",")
+                                  .map(color => color.trim())
+                                  .filter(Boolean);
+                                field.onChange(colors);
+                              }}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="isPremium"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel>Premium</FormLabel>
+                            <FormDescription>
+                              Is this a premium wallpaper?
+                            </FormDescription>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="isAIgenerated"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel>AI Generated</FormLabel>
+                            <FormDescription>
+                              Was this wallpaper generated by AI?
+                            </FormDescription>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  
+                  <DialogFooter>
+                    <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button type="submit">Save Changes</Button>
+                  </DialogFooter>
+                </form>
+              </Form>
             </DialogContent>
           </Dialog>
           
@@ -353,21 +817,21 @@ const WallpaperDetails = () => {
                     </TabsTrigger>
                   </TabsList>
                   
-                  <div className="aspect-[3/4] relative">
+                  <div className="relative h-[400px] md:h-[500px] bg-gradient-to-br from-slate-100 to-slate-50 dark:from-slate-900 dark:to-slate-800">
                     <TabsContent value="thumbnail" className="m-0 h-full">
                       <img
                         src={wallpaper.thumbnail}
                         alt={wallpaper.name}
-                        className="h-full w-full object-cover"
+                        className="h-full w-full object-contain"
                       />
                     </TabsContent>
                     
                     <TabsContent value="preview" className="m-0 h-full">
                       {currentTab === "preview" && (
                         <img
-                          src={wallpaper.previewUrl}
+                          src={wallpaper.preview}
                           alt={wallpaper.name}
-                          className="h-full w-full object-cover"
+                          className="h-full w-full object-contain"
                         />
                       )}
                     </TabsContent>
@@ -375,9 +839,9 @@ const WallpaperDetails = () => {
                     <TabsContent value="original" className="m-0 h-full">
                       {currentTab === "original" && (
                         <img
-                          src={wallpaper.imageUrl}
+                          src={wallpaper.image}
                           alt={wallpaper.name}
-                          className="h-full w-full object-cover"
+                          className="h-full w-full object-contain"
                         />
                       )}
                     </TabsContent>
@@ -391,6 +855,16 @@ const WallpaperDetails = () => {
                         {getStatusIcon(wallpaper.status)}
                         <span className="ml-1 capitalize">{wallpaper.status}</span>
                       </div>
+                    </div>
+
+                    <div className="absolute bottom-4 right-4 flex gap-2">
+                      <Button 
+                        onClick={handleDownload}
+                        className="bg-white/80 backdrop-blur-sm hover:bg-white/90 text-black"
+                        size="sm"
+                      >
+                        <Download className="h-4 w-4 mr-1" /> Download
+                      </Button>
                     </div>
                   </div>
                 </div>

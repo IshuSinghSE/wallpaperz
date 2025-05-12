@@ -15,6 +15,10 @@ import WallpaperList from "@/pages/dashboard/WallpaperList";
 import WallpaperUpload from "@/pages/dashboard/WallpaperUpload";
 import WallpaperDetails from "@/pages/dashboard/WallpaperDetails";
 import PendingApproval from "@/pages/dashboard/PendingApproval";
+import Categories from "@/pages/dashboard/Categories";
+import Collections from "@/pages/dashboard/Collections";
+import Users from "@/pages/dashboard/Users";
+import Settings from "@/pages/dashboard/Settings";
 
 // Auth Pages
 import Login from "@/pages/Login";
@@ -42,11 +46,10 @@ const App = () => (
                 <Route path="/dashboard/wallpapers/:id" element={<WallpaperDetails />} />
                 <Route path="/dashboard/upload" element={<WallpaperUpload />} />
                 <Route path="/dashboard/pending" element={<PendingApproval />} />
-                {/* Add other dashboard routes as they are developed */}
-                <Route path="/dashboard/categories" element={<div>Categories (Coming Soon)</div>} />
-                <Route path="/dashboard/collections" element={<div>Collections (Coming Soon)</div>} />
-                <Route path="/dashboard/users" element={<div>Users (Coming Soon)</div>} />
-                <Route path="/dashboard/settings" element={<div>Settings (Coming Soon)</div>} />
+                <Route path="/dashboard/categories" element={<Categories />} />
+                <Route path="/dashboard/collections" element={<Collections />} />
+                <Route path="/dashboard/users" element={<Users />} />
+                <Route path="/dashboard/settings" element={<Settings />} />
               </Route>
             </Route>
             
