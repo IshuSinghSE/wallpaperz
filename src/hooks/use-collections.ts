@@ -46,7 +46,7 @@ export const useCollections = () => {
       const collectionRef = collection(db, "collections");
       
       if (!isInitial && lastVisible) {
-        // Use direct arguments instead of spread operator
+        // Don't use spread operator, pass parameters directly
         q = query(
           collectionRef,
           orderBy("createdAt", "desc"),
@@ -75,9 +75,20 @@ export const useCollections = () => {
       const lastVisibleDoc = querySnapshot.docs[querySnapshot.docs.length - 1];
       setLastVisible(lastVisibleDoc);
       
-      const collectionsList = querySnapshot.docs.map(
-        (doc) => ({ id: doc.id, ...doc.data() } as Collection)
-      );
+      const collectionsList = querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          name: data.name,
+          description: data.description,
+          wallpaperIds: data.wallpaperIds || [],
+          coverImage: data.coverImage,
+          createdBy: data.createdBy,
+          tags: data.tags,
+          type: data.type,
+          createdAt: data.createdAt
+        } as Collection;
+      });
       
       if (isInitial) {
         setCollections(collectionsList);

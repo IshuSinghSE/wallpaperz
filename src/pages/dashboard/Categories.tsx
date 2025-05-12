@@ -72,7 +72,7 @@ const Categories = () => {
       const categoriesCollection = collection(db, "categories");
       
       if (!isInitial && lastVisible) {
-        // Fix: Use direct parameters instead of spread operator
+        // Fix: Pass parameters directly without spread operator
         q = query(
           categoriesCollection,
           orderBy("name"),
@@ -101,9 +101,17 @@ const Categories = () => {
       const lastVisibleDoc = querySnapshot.docs[querySnapshot.docs.length - 1];
       setLastVisible(lastVisibleDoc);
       
-      const categoriesList = querySnapshot.docs.map(
-        (doc) => ({ id: doc.id, ...doc.data() } as Category)
-      );
+      const categoriesList = querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          name: data.name,
+          description: data.description,
+          iconUrl: data.iconUrl,
+          wallpaperCount: data.wallpaperCount || 0,
+          createdAt: data.createdAt
+        } as Category;
+      });
       
       if (isInitial) {
         setCategories(categoriesList);
