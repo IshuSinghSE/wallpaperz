@@ -2,6 +2,7 @@
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { 
   LayoutDashboard, 
   ImageIcon, 
@@ -27,7 +28,7 @@ const NavItem = ({ to, icon: Icon, label, isOpen }: NavItemProps) => {
       to={to}
       className={({ isActive }) =>
         cn(
-          "flex items-center rounded-md px-3 py-2 text-sm font-medium transition-all",
+          "flex items-center rounded-md px-3 py-2 text-sm font-medium transition-all duration-200",
           isOpen ? "justify-start" : "justify-center",
           isActive
             ? "bg-sidebar-accent text-sidebar-accent-foreground"
@@ -36,7 +37,7 @@ const NavItem = ({ to, icon: Icon, label, isOpen }: NavItemProps) => {
       }
     >
       <Icon className={cn("h-5 w-5", isOpen ? "mr-2" : "mr-0")} />
-      {isOpen && <span>{label}</span>}
+      {isOpen && <span className="animate-fade-in">{label}</span>}
     </NavLink>
   );
 };
@@ -48,6 +49,7 @@ interface SidebarProps {
 
 const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
   const { currentUser } = useAuth();
+  const isMobile = useIsMobile();
 
   const navItems = [
     { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
@@ -63,8 +65,10 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
   return (
     <aside
       className={cn(
-        "fixed inset-y-0 left-0 z-50 flex flex-col border-r bg-sidebar transition-all duration-300 ease-in-out lg:relative lg:z-auto",
-        isOpen ? "w-64" : "w-16"
+        "fixed inset-y-0 left-0 z-50 flex flex-col border-r transition-all duration-300 ease-in-out glassmorphism backdrop-blur-md",
+        isOpen ? "w-64" : "w-16",
+        isMobile && !isOpen ? "-translate-x-full" : "translate-x-0",
+        "lg:relative lg:z-auto"
       )}
     >
       <div className="flex h-16 items-center justify-between px-4">
@@ -81,7 +85,7 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
         </button>
       </div>
 
-      <div className="scrollbar-thin flex-1 overflow-y-auto p-3">
+      <div className="flex-1 overflow-y-auto p-3 scrollbar-thin">
         <nav className="flex flex-col space-y-1">
           {navItems.map((item) => (
             <NavItem 

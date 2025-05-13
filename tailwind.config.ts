@@ -15,6 +15,10 @@ export default {
 			center: true,
 			padding: '2rem',
 			screens: {
+				'sm': '640px',
+				'md': '768px',
+				'lg': '1024px',
+				'xl': '1280px',
 				'2xl': '1400px'
 			}
 		},
@@ -105,13 +109,21 @@ export default {
 						opacity: "1"
 					}
 				},
+				"slide-in": {
+					"0%": { transform: "translateX(-100%)" },
+					"100%": { transform: "translateX(0)" }
+				},
 			},
 			animation: {
 				"accordion-down": "accordion-down 0.2s ease-out",
 				"accordion-up": "accordion-up 0.2s ease-out",
 				"fade-in": "fade-in 0.3s ease-out",
 				"scale-in": "scale-in 0.2s ease-out",
+				"slide-in": "slide-in 0.3s ease-out",
 			},
+			backdropBlur: {
+				xs: '2px',
+			}
 		},
 	},
 	plugins: [require("tailwindcss-animate")],

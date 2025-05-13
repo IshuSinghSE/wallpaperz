@@ -106,3 +106,17 @@
     @apply border-b hover:bg-muted/40;
   }
 }
+
+@layer utilities {
+  .glassmorphism {
+    @apply backdrop-blur-md bg-white/10 dark:bg-black/20 border border-white/20 dark:border-white/10 shadow-xl;
+  }
+  
+  .card-gradient {
+    @apply bg-gradient-to-br from-white/50 to-white/5 dark:from-gray-900/50 dark:to-gray-900/20 backdrop-blur-sm;
+  }
+  
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary via-purple-500 to-blue-500 bg-clip-text text-transparent;
+  }
+}

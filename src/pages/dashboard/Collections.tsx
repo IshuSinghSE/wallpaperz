@@ -36,7 +36,8 @@ const Collections = () => {
     updateCollection,
     deleteCollection,
     resetSearch,
-    loadMore
+    loadMore,
+    fetchCollections
   } = useCollections();
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -92,7 +93,7 @@ const Collections = () => {
       resetForm();
       setIsAddDialogOpen(false);
       // Refresh collections list
-      await useCollections().fetchCollections(true);
+      await fetchCollections(true);
     }
   };
 
@@ -109,7 +110,7 @@ const Collections = () => {
 
     if (success) {
       setIsEditDialogOpen(false);
-      await useCollections().fetchCollections(true);
+      await fetchCollections(true);
     }
   };
 
@@ -120,7 +121,7 @@ const Collections = () => {
     
     if (success) {
       setIsDeleteDialogOpen(false);
-      await useCollections().fetchCollections(true);
+      await fetchCollections(true);
     }
   };
 
@@ -130,10 +131,10 @@ const Collections = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="space-y-6 animate-fade-in">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Collections</h1>
+          <h1 className="text-2xl font-bold text-gradient">Collections</h1>
           <p className="text-muted-foreground">
             Curated groups of wallpapers
           </p>
@@ -141,7 +142,7 @@ const Collections = () => {
 
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="shadow-lg shadow-primary/20 backdrop-blur-sm bg-primary/80">
+            <Button className="glassmorphism shadow-lg shadow-primary/20 backdrop-blur-sm">
               <Plus className="mr-2 h-4 w-4" /> Add Collection
             </Button>
           </DialogTrigger>
@@ -161,7 +162,7 @@ const Collections = () => {
           <Input
             type="text"
             placeholder="Search collections by name or description..."
-            className="pl-10 backdrop-blur-sm bg-white/10 border border-white/20 shadow-lg"
+            className="pl-10 glassmorphism bg-white/10 dark:bg-black/10 border border-white/20 dark:border-white/10 shadow-lg"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -180,7 +181,7 @@ const Collections = () => {
         </form>
       </div>
 
-      <Card className="backdrop-blur-sm bg-white/10 border border-white/20 shadow-xl">
+      <Card className="glassmorphism card-gradient border-white/20 dark:border-white/10 shadow-xl">
         <CardHeader>
           <CardTitle>All Collections</CardTitle>
           <CardDescription>
@@ -194,7 +195,7 @@ const Collections = () => {
               <span className="ml-2">Loading collections...</span>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {collections.length === 0 ? (
                 <div className="col-span-full text-center py-10">
                   <p>No collections found. Create your first collection.</p>
@@ -216,7 +217,7 @@ const Collections = () => {
             <div className="mt-8 flex justify-center">
               <Button 
                 onClick={loadMore} 
-                className="shadow-lg shadow-primary/10 backdrop-blur-sm bg-primary/80"
+                className="glassmorphism shadow-lg shadow-primary/10"
               >
                 {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Load More Collections"}
               </Button>
