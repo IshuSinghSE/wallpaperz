@@ -66,10 +66,10 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
   return (
     <aside
       className={cn(
-        "fixed inset-y-0 left-0 z-50 flex flex-col border-r transition-all duration-300 ease-in-out glassmorphism backdrop-blur-md",
+        "fixed inset-y-0 left-0 z-50 flex flex-col border-r border-white/20 dark:border-slate-800/50 transition-all duration-300 ease-in-out glassmorphism backdrop-blur-md",
         isOpen ? "w-64" : "w-16",
-        isMobile && !isOpen ? "-translate-x-full" : "translate-x-0",
-        "lg:relative lg:z-auto"
+        // On mobile: translate offscreen when closed, show when open
+        isMobile && !isOpen ? "-translate-x-full" : "translate-x-0"
       )}
     >
       <div className="flex h-16 items-center justify-between px-4">
@@ -78,9 +78,13 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
         ) : (
           <h1 className="mx-auto text-xl font-bold text-sidebar-foreground">WA</h1>
         )}
+        {/* Only show this button on larger screens */}
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="rounded-md p-1.5 text-sidebar-foreground hover:bg-sidebar-accent/50"
+          className={cn(
+            "rounded-md p-1.5 text-sidebar-foreground hover:bg-sidebar-accent/50",
+            isMobile && "hidden" // Hide on mobile
+          )}
         >
           {isOpen ? <ChevronLeft className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
         </button>
@@ -103,14 +107,22 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
       {currentUser && (
         <Link 
           to="/dashboard/profile" 
-          className="border-t p-4 hover:bg-sidebar-accent/50 transition-colors"
+          className="border-t border-white/20 dark:border-slate-800/50 p-4 hover:bg-sidebar-accent/50 transition-colors"
         >
           <div className="flex items-center">
-            <img
-              src={currentUser.photoURL || "/placeholder.svg"}
-              alt="User avatar"
-              className="h-8 w-8 rounded-full"
-            />
+            <div className="h-8 w-8 rounded-full overflow-hidden bg-sidebar-accent/30">
+              {currentUser.photoURL ? (
+                <img
+                  src={currentUser.photoURL}
+                  alt="User avatar"
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="h-full w-full flex items-center justify-center">
+                  <User className="h-5 w-5 text-sidebar-foreground" />
+                </div>
+              )}
+            </div>
             {isOpen && (
               <div className="ml-3">
                 <p className="text-sm font-medium text-sidebar-foreground">

@@ -5,6 +5,7 @@ import { Menu, Bell, Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Link } from "react-router-dom";
 
 interface HeaderProps {
   sidebarOpen: boolean;
@@ -12,7 +13,7 @@ interface HeaderProps {
 }
 
 const Header = ({ sidebarOpen, setSidebarOpen }: HeaderProps) => {
-  const { signOut } = useAuth();
+  const { signOut, currentUser } = useAuth();
   const { toast } = useToast();
   const isMobile = useIsMobile();
 
@@ -36,12 +37,12 @@ const Header = ({ sidebarOpen, setSidebarOpen }: HeaderProps) => {
     <header className="sticky top-0 z-10 flex h-16 items-center border-b backdrop-blur-sm bg-background/80 dark:bg-background/50 px-4 shadow-sm transition-all duration-200">
       <button
         onClick={() => setSidebarOpen(!sidebarOpen)}
-        className="mr-4 rounded-md p-1.5 text-muted-foreground hover:bg-muted lg:hidden"
+        className="rounded-md p-1.5 text-muted-foreground hover:bg-muted"
       >
         <Menu className="h-5 w-5" />
       </button>
 
-      <div className="relative ml-2 hidden flex-1 md:flex">
+      <div className="relative ml-2 hidden md:flex flex-1">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <input
           type="search"
@@ -60,11 +61,29 @@ const Header = ({ sidebarOpen, setSidebarOpen }: HeaderProps) => {
           </span>
         </button>
 
-        {!isMobile && (
-          <Button variant="outline" size="sm" onClick={handleSignOut} className="glassmorphism">
-            Sign Out
-          </Button>
+        {isMobile && (
+          <Link to="/dashboard/profile" className="flex items-center">
+            <div className="h-8 w-8 rounded-full overflow-hidden bg-muted">
+              {currentUser?.photoURL ? (
+                <img
+                  src={currentUser.photoURL}
+                  alt="User avatar"
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
+                  <span className="text-xs font-medium text-muted-foreground">
+                    {currentUser?.displayName?.charAt(0) || "U"}
+                  </span>
+                </div>
+              )}
+            </div>
+          </Link>
         )}
+
+        <Button variant="outline" size="sm" onClick={handleSignOut} className="glassmorphism hidden md:flex">
+          Sign Out
+        </Button>
       </div>
     </header>
   );

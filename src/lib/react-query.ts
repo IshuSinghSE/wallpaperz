@@ -41,7 +41,7 @@ export const prepareTimestampForFirestore = (data: any): any => {
   // Deep clone to avoid modifying original object
   const result = { ...data };
   
-  // Convert Date objects to null for serverTimestamp() to handle
+  // Convert Date objects to Firestore Timestamp
   Object.keys(result).forEach(key => {
     if (result[key] instanceof Date) {
       result[key] = Timestamp.fromDate(result[key]);
