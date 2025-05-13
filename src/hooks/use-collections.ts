@@ -1,5 +1,6 @@
 
-import { useState, useEffect } from "react";
+import { useState, useCallback } from "react";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import {
   collection,
   getDocs,
@@ -19,138 +20,84 @@ import { db } from "@/lib/firebase";
 import { Collection } from "@/types";
 import { search } from "@/lib/search";
 import { useToast } from "@/hooks/use-toast";
+import { CACHE_KEYS } from "@/lib/cache-keys";
 
 const ITEMS_PER_PAGE = 12;
 
 export const useCollections = () => {
-  const [collections, setCollections] = useState<Collection[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [lastVisible, setLastVisible] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
   const [hasMore, setHasMore] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const { toast } = useToast();
 
-  useEffect(() => {
-    fetchCollections(true);
-  }, []);
+  // Query key based on search term
+  const queryKey = CACHE_KEYS.COLLECTIONS.list({ search: searchTerm });
 
-  const fetchCollections = async (isInitial: boolean = false) => {
-    try {
-      setLoading(true);
-      
-      if (isInitial) {
-        setLastVisible(null);
-      }
-      
-      let q;
-      const collectionRef = collection(db, "collections");
-      
-      if (!isInitial && lastVisible) {
-        // Don't use spread operator, pass parameters directly
-        q = query(
-          collectionRef,
-          orderBy("createdAt", "desc"),
-          startAfter(lastVisible),
-          limit(ITEMS_PER_PAGE)
-        );
-      } else {
-        q = query(
-          collectionRef,
-          orderBy("createdAt", "desc"),
-          limit(ITEMS_PER_PAGE)
-        );
-      }
-      
-      const querySnapshot = await getDocs(q);
-      
-      if (querySnapshot.empty) {
-        setHasMore(false);
-        setLoading(false);
-        if (isInitial) {
-          setCollections([]);
-        }
-        return;
-      }
-      
-      const lastVisibleDoc = querySnapshot.docs[querySnapshot.docs.length - 1];
-      setLastVisible(lastVisibleDoc);
-      
-      const collectionsList = querySnapshot.docs.map(doc => {
-        const data = doc.data() as DocumentData;
-        return {
-          id: doc.id,
-          name: data.name,
-          description: data.description,
-          wallpaperIds: data.wallpaperIds || [],
-          coverImage: data.coverImage,
-          createdBy: data.createdBy,
-          tags: data.tags,
-          type: data.type,
-          createdAt: data.createdAt
-        } as Collection;
-      });
-      
-      if (isInitial) {
-        setCollections(collectionsList);
-      } else {
-        setCollections(prev => [...prev, ...collectionsList]);
-      }
-      
-      setHasMore(querySnapshot.docs.length === ITEMS_PER_PAGE);
-    } catch (error) {
-      console.error("Error fetching collections:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load collections",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSearch = async (searchTerm: string) => {
-    if (!searchTerm.trim()) {
-      // If search is cleared, reset to normal view
-      fetchCollections(true);
-      return;
-    }
-    
-    try {
-      setLoading(true);
-      
-      const result = await search<Collection>({
-        collection: "collections",
-        searchTerm: searchTerm.trim(),
-        sortField: "createdAt",
-        sortDirection: "desc",
-        pageSize: ITEMS_PER_PAGE
-      });
-      
-      setCollections(result.items);
-      setLastVisible(result.lastVisible);
-      setHasMore(result.hasMore);
-      
-      if (result.items.length === 0) {
-        toast({
-          title: "No collections found",
-          description: `No collections matching "${searchTerm}" were found.`,
+  // Main query for collections data
+  const { 
+    data: collections = [],
+    isLoading,
+    isFetching, 
+    refetch
+  } = useQuery({
+    queryKey,
+    queryFn: async () => {
+      if (searchTerm) {
+        // Search mode
+        const result = await search<Collection>({
+          collection: "collections",
+          searchTerm: searchTerm.trim(),
+          sortField: "createdAt",
+          sortDirection: "desc",
+          pageSize: ITEMS_PER_PAGE
         });
+        
+        setLastVisible(result.lastVisible);
+        setHasMore(result.hasMore);
+        
+        if (result.items.length === 0) {
+          toast({
+            title: "No collections found",
+            description: `No collections matching "${searchTerm}" were found.`,
+          });
+        }
+        
+        return result.items;
+      } else {
+        // Normal fetch mode
+        const collectionRef = collection(db, "collections");
+        const q = query(
+          collectionRef,
+          orderBy("createdAt", "desc"),
+          limit(ITEMS_PER_PAGE)
+        );
+        
+        const querySnapshot = await getDocs(q);
+        
+        if (querySnapshot.empty) {
+          setHasMore(false);
+          return [];
+        }
+        
+        const lastVisibleDoc = querySnapshot.docs[querySnapshot.docs.length - 1];
+        setLastVisible(lastVisibleDoc);
+        
+        const collectionsList = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data() as DocumentData
+        })) as Collection[];
+        
+        setHasMore(querySnapshot.docs.length === ITEMS_PER_PAGE);
+        return collectionsList;
       }
-    } catch (error) {
-      console.error("Error searching collections:", error);
-      toast({
-        title: "Search error",
-        description: "Failed to search collections. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+    staleTime: 2 * 60 * 1000, // 2 minutes
+  });
 
-  const addCollection = async (newCollectionData: Partial<Collection>) => {
-    try {
+  // Add collection mutation
+  const addCollectionMutation = useMutation({
+    mutationFn: async (newCollectionData: Partial<Collection>) => {
       const newCollection = {
         ...newCollectionData,
         wallpaperIds: [],
@@ -158,89 +105,178 @@ export const useCollections = () => {
         createdAt: new Date()
       };
 
-      await addDoc(collection(db, "collections"), newCollection);
-      
+      const docRef = await addDoc(collection(db, "collections"), newCollection);
+      return { id: docRef.id, ...newCollection } as Collection;
+    },
+    onSuccess: () => {
       toast({
         title: "Success",
         description: "Collection added successfully",
       });
-      
-      // Refresh collections
-      return true;
-    } catch (error) {
+      // Invalidate cache to trigger a refetch
+      queryClient.invalidateQueries({ queryKey: CACHE_KEYS.COLLECTIONS.all });
+    },
+    onError: (error) => {
       console.error("Error adding collection:", error);
       toast({
         title: "Error",
         description: "Failed to add collection",
         variant: "destructive",
       });
-      return false;
     }
-  };
+  });
 
-  const updateCollection = async (id: string, data: Partial<Collection>) => {
-    try {
+  // Update collection mutation
+  const updateCollectionMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string, data: Partial<Collection> }) => {
       await updateDoc(doc(db, "collections", id), data);
-
+      return { id, ...data };
+    },
+    onSuccess: (_, variables) => {
       toast({
         title: "Success",
         description: "Collection updated successfully",
       });
-      
-      return true;
-    } catch (error) {
+      // Update the cache optimistically
+      queryClient.setQueryData(queryKey, (old: Collection[] = []) => 
+        old.map(item => 
+          item.id === variables.id ? { ...item, ...variables.data } : item
+        )
+      );
+    },
+    onError: (error) => {
       console.error("Error updating collection:", error);
       toast({
         title: "Error",
         description: "Failed to update collection",
         variant: "destructive",
       });
-      return false;
     }
-  };
+  });
 
-  const deleteCollection = async (id: string) => {
-    try {
+  // Delete collection mutation
+  const deleteCollectionMutation = useMutation({
+    mutationFn: async (id: string) => {
       await deleteDoc(doc(db, "collections", id));
+      return id;
+    },
+    onSuccess: (id) => {
       toast({
         title: "Success",
         description: "Collection deleted successfully",
       });
-      return true;
-    } catch (error) {
+      // Update the cache optimistically
+      queryClient.setQueryData(queryKey, (old: Collection[] = []) => 
+        old.filter(item => item.id !== id)
+      );
+    },
+    onError: (error) => {
       console.error("Error deleting collection:", error);
       toast({
         title: "Error",
         description: "Failed to delete collection",
         variant: "destructive",
       });
-      return false;
     }
-  };
+  });
 
-  const resetSearch = () => {
+  // Load more function
+  const loadMore = useCallback(async () => {
+    if (isLoading || !hasMore || !lastVisible) return;
+    
+    try {
+      if (searchTerm) {
+        // Search mode - load more search results
+        const result = await search<Collection>({
+          collection: "collections",
+          searchTerm: searchTerm.trim(),
+          sortField: "createdAt",
+          sortDirection: "desc",
+          pageSize: ITEMS_PER_PAGE,
+          lastVisible
+        });
+        
+        setLastVisible(result.lastVisible);
+        setHasMore(result.hasMore);
+        
+        // Update the cache with combined results
+        queryClient.setQueryData(queryKey, (oldData: Collection[] = []) => {
+          return [...oldData, ...result.items];
+        });
+      } else {
+        // Normal mode - load more with regular query
+        const collectionRef = collection(db, "collections");
+        const q = query(
+          collectionRef,
+          orderBy("createdAt", "desc"),
+          startAfter(lastVisible),
+          limit(ITEMS_PER_PAGE)
+        );
+        
+        const querySnapshot = await getDocs(q);
+        
+        if (querySnapshot.empty) {
+          setHasMore(false);
+          return;
+        }
+        
+        const lastVisibleDoc = querySnapshot.docs[querySnapshot.docs.length - 1];
+        setLastVisible(lastVisibleDoc);
+        
+        const newCollections = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data() as DocumentData
+        })) as Collection[];
+        
+        setHasMore(querySnapshot.docs.length === ITEMS_PER_PAGE);
+        
+        // Update the cache with combined results
+        queryClient.setQueryData(queryKey, (oldData: Collection[] = []) => {
+          return [...oldData, ...newCollections];
+        });
+      }
+    } catch (error) {
+      console.error("Error loading more collections:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load more collections. Please try again.",
+        variant: "destructive"
+      });
+    }
+  }, [isLoading, hasMore, lastVisible, searchTerm, queryClient, queryKey, toast]);
+
+  // Handle search
+  const handleSearch = useCallback((term: string) => {
+    setSearchTerm(term);
+    setLastVisible(null);
+    setHasMore(true);
+    // The actual search will be triggered by the useQuery hook due to queryKey change
+  }, []);
+
+  // Reset search
+  const resetSearch = useCallback(() => {
     setSearchTerm("");
-    fetchCollections(true);
-  };
-
-  const loadMore = () => {
-    if (!loading && hasMore) {
-      fetchCollections(false);
-    }
-  };
+    setLastVisible(null);
+    setHasMore(true);
+    // The reset will be triggered by the useQuery hook due to queryKey change
+  }, []);
 
   return {
     collections,
-    loading,
+    loading: isLoading,
+    isFetching,
     hasMore,
     searchTerm,
     setSearchTerm,
-    fetchCollections,
     handleSearch,
-    addCollection,
-    updateCollection,
-    deleteCollection,
+    addCollection: (newCollectionData: Partial<Collection>) => 
+      addCollectionMutation.mutate(newCollectionData),
+    updateCollection: (id: string, data: Partial<Collection>) => 
+      updateCollectionMutation.mutate({ id, data }),
+    deleteCollection: (id: string) => 
+      deleteCollectionMutation.mutate(id),
     resetSearch,
-    loadMore
+    loadMore,
+    refresh: refetch,
   };
 };

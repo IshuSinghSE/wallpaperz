@@ -1,91 +1,68 @@
 
-import { useEffect, useState } from "react";
-import { collection, getDocs, query, where, orderBy, limit } from "firebase/firestore";
-import { db } from "@/lib/firebase";
-import { Wallpaper } from "@/types";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, ImageIcon, Clock, Check, X } from "lucide-react";
+import { Loader2, ImageIcon, Clock, Check, X, RefreshCw } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useDashboardData } from "@/hooks/use-dashboard-data";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const Dashboard = () => {
-  const [recentWallpapers, setRecentWallpapers] = useState<Wallpaper[]>([]);
-  const [pendingCount, setPendingCount] = useState(0);
-  const [approvedCount, setApprovedCount] = useState(0);
-  const [rejectedCount, setRejectedCount] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const { 
+    dashboardData, 
+    isLoading, 
+    isFetching, 
+    refresh 
+  } = useDashboardData();
 
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        // Fetch recent wallpapers
-        const wallpapersQuery = query(
-          collection(db, "wallpapers"),
-          orderBy("createdAt", "desc"),
-          limit(5)
-        );
-        const wallpapersSnapshot = await getDocs(wallpapersQuery);
-        const wallpapersData = wallpapersSnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        })) as Wallpaper[];
-        setRecentWallpapers(wallpapersData);
-
-        // Fetch counts
-        const pendingQuery = query(
-          collection(db, "wallpapers"),
-          where("status", "==", "pending")
-        );
-        const pendingSnapshot = await getDocs(pendingQuery);
-        setPendingCount(pendingSnapshot.size);
-
-        const approvedQuery = query(
-          collection(db, "wallpapers"),
-          where("status", "==", "approved")
-        );
-        const approvedSnapshot = await getDocs(approvedQuery);
-        setApprovedCount(approvedSnapshot.size);
-
-        const rejectedQuery = query(
-          collection(db, "wallpapers"),
-          where("status", "==", "rejected")
-        );
-        const rejectedSnapshot = await getDocs(rejectedQuery);
-        setRejectedCount(rejectedSnapshot.size);
-      } catch (error) {
-        console.error("Error fetching dashboard data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchDashboardData();
-  }, []);
-
-  if (loading) {
+  if (isLoading && !dashboardData) {
     return (
-      <div className="flex h-full items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="ml-2">Loading dashboard data...</span>
+      <div className="animate-fade-in space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold">Dashboard</h1>
+          <p className="text-muted-foreground">Welcome to the wallpaper admin panel</p>
+        </div>
+        <DashboardSkeleton />
       </div>
     );
   }
 
   return (
     <div className="animate-fade-in space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Dashboard</h1>
-        <p className="text-muted-foreground">Welcome to the wallpaper admin panel</p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold">Dashboard</h1>
+          <p className="text-muted-foreground">Welcome to the wallpaper admin panel</p>
+        </div>
+        <Button 
+          onClick={() => refresh()} 
+          size="sm" 
+          variant="outline" 
+          disabled={isFetching}
+          className="backdrop-blur-sm bg-white/10 border-white/20 shadow-lg"
+        >
+          {isFetching ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Refreshing...
+            </>
+          ) : (
+            <>
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Refresh Data
+            </>
+          )}
+        </Button>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
+        <Card className="backdrop-blur-sm bg-white/10 dark:bg-slate-900/20 border border-white/20 dark:border-slate-800/50 shadow-xl">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Total Wallpapers</CardTitle>
             <ImageIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {approvedCount + pendingCount + rejectedCount}
+              {dashboardData?.totalCount || 0}
             </div>
             <p className="text-xs text-muted-foreground">
               All wallpapers in the database
@@ -94,13 +71,13 @@ const Dashboard = () => {
         </Card>
 
         <Link to="/dashboard/pending">
-          <Card className="hover:bg-muted/10 transition-colors cursor-pointer h-full">
+          <Card className="hover:bg-muted/10 transition-colors cursor-pointer h-full backdrop-blur-sm bg-white/10 dark:bg-slate-900/20 border border-white/20 dark:border-slate-800/50 shadow-xl">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">Pending Approval</CardTitle>
               <Clock className="h-4 w-4 text-amber-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{pendingCount}</div>
+              <div className="text-2xl font-bold">{dashboardData?.pendingCount || 0}</div>
               <p className="text-xs text-muted-foreground">
                 Awaiting moderation
               </p>
@@ -108,26 +85,26 @@ const Dashboard = () => {
           </Card>
         </Link>
 
-        <Card>
+        <Card className="backdrop-blur-sm bg-white/10 dark:bg-slate-900/20 border border-white/20 dark:border-slate-800/50 shadow-xl">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Approved</CardTitle>
             <Check className="h-4 w-4 text-emerald-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{approvedCount}</div>
+            <div className="text-2xl font-bold">{dashboardData?.approvedCount || 0}</div>
             <p className="text-xs text-muted-foreground">
               Live in the app
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="backdrop-blur-sm bg-white/10 dark:bg-slate-900/20 border border-white/20 dark:border-slate-800/50 shadow-xl">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Rejected</CardTitle>
             <X className="h-4 w-4 text-rose-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{rejectedCount}</div>
+            <div className="text-2xl font-bold">{dashboardData?.rejectedCount || 0}</div>
             <p className="text-xs text-muted-foreground">
               Not approved for use
             </p>
@@ -135,29 +112,29 @@ const Dashboard = () => {
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
+      <Card className="backdrop-blur-sm bg-white/10 dark:bg-slate-900/20 border border-white/20 dark:border-slate-800/50 shadow-xl">
+        <CardHeader className="flex justify-between items-center">
           <CardTitle>Recent Wallpapers</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {recentWallpapers.length > 0 ? (
-              <div className="rounded-md border">
+            {dashboardData?.recentWallpapers && dashboardData.recentWallpapers.length > 0 ? (
+              <div className="rounded-md border border-white/20 dark:border-slate-800/50 overflow-hidden">
                 <div className="dashboard-table w-full">
                   <table className="w-full">
                     <thead>
-                      <tr>
+                      <tr className="border-b border-white/20 dark:border-slate-800/50">
                         <th>Thumbnail</th>
                         <th>Name</th>
                         <th>Status</th>
-                        <th>Author</th>
-                        <th>Date Added</th>
+                        <th className="hidden sm:table-cell">Author</th>
+                        <th className="hidden md:table-cell">Date Added</th>
                         <th>Action</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {recentWallpapers.map((wallpaper) => (
-                        <tr key={wallpaper.id}>
+                      {dashboardData.recentWallpapers.map((wallpaper) => (
+                        <tr key={wallpaper.id} className="border-b border-white/10 dark:border-slate-800/30">
                           <td className="w-16">
                             <Link to={`/dashboard/wallpapers/${wallpaper.id}`}>
                               <img
@@ -187,13 +164,13 @@ const Dashboard = () => {
                               {wallpaper.status}
                             </span>
                           </td>
-                          <td>{wallpaper.author}</td>
-                          <td>
+                          <td className="hidden sm:table-cell">{wallpaper.author}</td>
+                          <td className="hidden md:table-cell">
                             {wallpaper.createdAt instanceof Date
-                              ? wallpaper.createdAt.toISOString()
+                              ? wallpaper.createdAt.toLocaleDateString()
                               : wallpaper.createdAt?.toDate
-                                ? wallpaper.createdAt.toDate().toISOString()
-                                : wallpaper.createdAt.toString().slice(0, 16).replace("T", " ")}
+                                ? wallpaper.createdAt.toDate().toLocaleDateString()
+                                : new Date(wallpaper.createdAt).toLocaleDateString()}
                           </td>
                           <td>
                             <Link
@@ -218,6 +195,47 @@ const Dashboard = () => {
         </CardContent>
       </Card>
     </div>
+  );
+};
+
+// Loading skeleton for dashboard
+const DashboardSkeleton = () => {
+  return (
+    <>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {[1, 2, 3, 4].map((i) => (
+          <Card key={i} className="backdrop-blur-sm bg-white/10 dark:bg-slate-900/20 border border-white/20 dark:border-slate-800/50 shadow-xl">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <Skeleton className="h-5 w-32" />
+              <Skeleton className="h-4 w-4 rounded-full" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-8 w-16 mb-2" />
+              <Skeleton className="h-4 w-32" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+      
+      <Card className="backdrop-blur-sm bg-white/10 dark:bg-slate-900/20 border border-white/20 dark:border-slate-800/50 shadow-xl">
+        <CardHeader>
+          <Skeleton className="h-6 w-40" />
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="flex items-center space-x-4 border-b pb-4">
+                <Skeleton className="h-12 w-12 rounded-md" />
+                <div className="space-y-2 flex-1">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-4 w-16" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </>
   );
 };
 

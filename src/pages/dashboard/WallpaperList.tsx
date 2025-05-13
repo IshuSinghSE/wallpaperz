@@ -1,20 +1,7 @@
 
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import {
-  collection,
-  getDocs,
-  query,
-  orderBy,
-  limit,
-  startAfter,
-  where,
-  DocumentData,
-  QueryDocumentSnapshot
-} from "firebase/firestore";
-import { db } from "@/lib/firebase";
 import { Wallpaper, WallpaperStatus } from "@/types";
-import { search } from "@/lib/search";
 import { 
   Card, 
   CardContent, 
@@ -32,29 +19,42 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { Check, X, Edit, Loader2, Search, Download, Filter } from "lucide-react";
+import { Check, X, Edit, Loader2, Search, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
-
-const ITEMS_PER_PAGE = 20;
+import { useWallpapers } from "@/hooks/use-wallpapers";
+import { Skeleton } from "@/components/ui/skeleton";
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 const WallpaperList = () => {
   const navigate = useNavigate();
-  const [wallpapers, setWallpapers] = useState<Wallpaper[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [lastVisible, setLastVisible] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
-  const [hasMore, setHasMore] = useState(true);
-  const [filterStatus, setFilterStatus] = useState<WallpaperStatus | "all">("all");
-  const [filterCategory, setFilterCategory] = useState<string>("all");
   const [categories, setCategories] = useState<string[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [isSearching, setIsSearching] = useState(false);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
   const { toast } = useToast();
+
+  const { 
+    wallpapers, 
+    isLoading, 
+    isFetching,
+    hasMore, 
+    filterStatus, 
+    setFilterStatus, 
+    filterCategory, 
+    setFilterCategory, 
+    searchTerm, 
+    setSearchTerm,
+    handleSearch,
+    resetSearch,
+    loadMore,
+    refresh
+  } = useWallpapers();
 
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const categoriesQuery = query(collection(db, "categories"));
+        setIsLoadingCategories(true);
+        const categoriesQuery = collection(db, "categories");
         const categoriesSnapshot = await getDocs(categoriesQuery);
         const categoriesData = categoriesSnapshot.docs.map(doc => doc.data().name);
         setCategories(categoriesData);
@@ -65,180 +65,13 @@ const WallpaperList = () => {
           description: "Could not load categories. Please try again later.",
           variant: "destructive"
         });
+      } finally {
+        setIsLoadingCategories(false);
       }
     };
 
     fetchCategories();
   }, [toast]);
-
-  useEffect(() => {
-    setWallpapers([]);
-    setLastVisible(null);
-    setHasMore(true);
-    loadWallpapers(true);
-  }, [filterStatus, filterCategory]);
-
-  const buildQuery = (isInitial: boolean = true) => {
-    const wallpapersQuery = collection(db, "wallpapers");
-    
-    const queryConstraints = [];
-    
-    if (filterStatus !== "all") {
-      queryConstraints.push(where("status", "==", filterStatus));
-    }
-    
-    if (filterCategory !== "all") {
-      queryConstraints.push(where("category", "==", filterCategory));
-    }
-    
-    queryConstraints.push(orderBy("createdAt", "desc"));
-    queryConstraints.push(limit(ITEMS_PER_PAGE));
-    
-    if (!isInitial && lastVisible) {
-      queryConstraints.push(startAfter(lastVisible));
-    }
-    
-    return query(wallpapersQuery, ...queryConstraints);
-  };
-
-  const loadWallpapers = async (isInitial: boolean = false) => {
-    try {
-      setLoading(true);
-      
-      const q = buildQuery(isInitial);
-      const querySnapshot = await getDocs(q);
-      
-      if (querySnapshot.empty) {
-        setHasMore(false);
-        setLoading(false);
-        return;
-      }
-      
-      const lastVisibleDoc = querySnapshot.docs[querySnapshot.docs.length - 1];
-      setLastVisible(lastVisibleDoc);
-      
-      const wallpaperData = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Wallpaper[];
-      
-      if (isInitial) {
-        setWallpapers(wallpaperData);
-      } else {
-        setWallpapers(prev => [...prev, ...wallpaperData]);
-      }
-      
-      setHasMore(querySnapshot.docs.length === ITEMS_PER_PAGE);
-    } catch (error) {
-      console.error("Error loading wallpapers:", error);
-      toast({
-        title: "Error loading wallpapers",
-        description: "Could not load wallpapers. Please try again later.",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!searchTerm.trim()) {
-      // If search is cleared, reset to normal view
-      setWallpapers([]);
-      setLastVisible(null);
-      setHasMore(true);
-      loadWallpapers(true);
-      return;
-    }
-    
-    try {
-      setIsSearching(true);
-      setLoading(true);
-
-      // Use our search utility
-      const filters: Record<string, any> = {};
-      if (filterStatus !== "all") filters.status = filterStatus;
-      if (filterCategory !== "all") filters.category = filterCategory;
-      
-      const result = await search<Wallpaper>({
-        collection: "wallpapers",
-        searchTerm: searchTerm.trim(),
-        filters,
-        sortField: "createdAt",
-        sortDirection: "desc",
-        pageSize: ITEMS_PER_PAGE
-      });
-      
-      setWallpapers(result.items);
-      setLastVisible(result.lastVisible);
-      setHasMore(result.hasMore);
-      
-      if (result.items.length === 0) {
-        toast({
-          title: "No results found",
-          description: `No wallpapers matching "${searchTerm}" were found.`,
-        });
-      }
-    } catch (error) {
-      console.error("Error searching wallpapers:", error);
-      toast({
-        title: "Search error",
-        description: "Failed to search wallpapers. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-      setIsSearching(false);
-    }
-  };
-
-  const handleSearchMoreResults = async () => {
-    if (!searchTerm.trim() || !lastVisible || !hasMore || loading) return;
-    
-    try {
-      setLoading(true);
-      
-      // Use our search utility with lastVisible for pagination
-      const filters: Record<string, any> = {};
-      if (filterStatus !== "all") filters.status = filterStatus;
-      if (filterCategory !== "all") filters.category = filterCategory;
-      
-      const result = await search<Wallpaper>({
-        collection: "wallpapers",
-        searchTerm: searchTerm.trim(),
-        filters,
-        sortField: "createdAt",
-        sortDirection: "desc",
-        pageSize: ITEMS_PER_PAGE,
-        lastVisible
-      });
-      
-      setWallpapers(prev => [...prev, ...result.items]);
-      setLastVisible(result.lastVisible);
-      setHasMore(result.hasMore);
-    } catch (error) {
-      console.error("Error searching more wallpapers:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load more search results.",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadMore = () => {
-    if (!loading && hasMore) {
-      if (searchTerm.trim()) {
-        handleSearchMoreResults();
-      } else {
-        loadWallpapers();
-      }
-    }
-  };
 
   const handleViewWallpaper = (id: string) => {
     navigate(`/dashboard/wallpapers/${id}`);
@@ -259,23 +92,41 @@ const WallpaperList = () => {
     }
   };
 
-  const resetSearch = () => {
-    setSearchTerm("");
-    setWallpapers([]);
-    setLastVisible(null);
-    setHasMore(true);
-    loadWallpapers(true);
+  const onSubmitSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    handleSearch(searchTerm);
   };
 
   return (
     <div className="animate-fade-in space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Wallpapers</h1>
-        <p className="text-muted-foreground">Manage your wallpaper collection</p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold">Wallpapers</h1>
+          <p className="text-muted-foreground">Manage your wallpaper collection</p>
+        </div>
+        <Button 
+          onClick={() => refresh()} 
+          size="sm" 
+          variant="outline" 
+          disabled={isFetching}
+          className="backdrop-blur-sm bg-white/10 border-white/20 shadow-lg"
+        >
+          {isFetching ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Refreshing...
+            </>
+          ) : (
+            <>
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Refresh
+            </>
+          )}
+        </Button>
       </div>
 
       <div className="flex flex-wrap items-center gap-4">
-        <form onSubmit={handleSearch} className="relative flex-1">
+        <form onSubmit={onSubmitSearch} className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="text"
@@ -303,6 +154,7 @@ const WallpaperList = () => {
             <Select
               value={filterStatus}
               onValueChange={(value) => setFilterStatus(value as WallpaperStatus | "all")}
+              disabled={isLoading}
             >
               <SelectTrigger className="w-[180px] backdrop-blur-sm bg-white/10 border border-white/20 shadow-lg">
                 <SelectValue placeholder="Filter by status" />
@@ -324,6 +176,7 @@ const WallpaperList = () => {
             <Select
               value={filterCategory}
               onValueChange={setFilterCategory}
+              disabled={isLoading || isLoadingCategories}
             >
               <SelectTrigger className="w-[180px] backdrop-blur-sm bg-white/10 border border-white/20 shadow-lg">
                 <SelectValue placeholder="Filter by category" />
@@ -344,11 +197,8 @@ const WallpaperList = () => {
         </div>
       </div>
 
-      {loading && wallpapers.length === 0 ? (
-        <div className="flex h-64 items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <span className="ml-2">Loading wallpapers...</span>
-        </div>
+      {isLoading && wallpapers.length === 0 ? (
+        <WallpaperGridSkeleton />
       ) : (
         <>
           {wallpapers.length > 0 ? (
@@ -438,10 +288,10 @@ const WallpaperList = () => {
             <div className="mt-8 flex justify-center">
               <Button
                 onClick={loadMore}
-                disabled={loading}
+                disabled={isFetching}
                 className="min-w-[200px] shadow-lg shadow-primary/10 backdrop-blur-sm bg-primary/80"
               >
-                {loading ? (
+                {isFetching ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
                   "Load More"
@@ -451,6 +301,16 @@ const WallpaperList = () => {
           )}
         </>
       )}
+    </div>
+  );
+};
+
+// Loading skeleton for wallpaper grid
+const WallpaperGridSkeleton = () => {
+  return (
+    <div className="flex h-64 items-center justify-center">
+      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <span className="ml-2">Loading wallpapers...</span>
     </div>
   );
 };
