@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { collection, getDocs, doc, setDoc, addDoc, deleteDoc, updateDoc, query, orderBy, limit, startAfter, QueryDocumentSnapshot, DocumentData } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -102,7 +101,7 @@ const Categories = () => {
       setLastVisible(lastVisibleDoc);
       
       const categoriesList = querySnapshot.docs.map(doc => {
-        const data = doc.data();
+        const data = doc.data() as DocumentData;
         return {
           id: doc.id,
           name: data.name,

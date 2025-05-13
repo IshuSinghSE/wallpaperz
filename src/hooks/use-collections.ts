@@ -76,7 +76,7 @@ export const useCollections = () => {
       setLastVisible(lastVisibleDoc);
       
       const collectionsList = querySnapshot.docs.map(doc => {
-        const data = doc.data();
+        const data = doc.data() as DocumentData;
         return {
           id: doc.id,
           name: data.name,
