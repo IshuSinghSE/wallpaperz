@@ -1,5 +1,5 @@
 
-import { NavLink } from "react-router-dom";
+import { NavLink, Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -12,7 +12,8 @@ import {
   Users, 
   Settings, 
   ChevronLeft, 
-  ChevronRight
+  ChevronRight,
+  User
 } from "lucide-react";
 
 interface NavItemProps {
@@ -99,22 +100,27 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
         </nav>
       </div>
 
-      {isOpen && currentUser && (
-        <div className="border-t p-4">
+      {currentUser && (
+        <Link 
+          to="/dashboard/profile" 
+          className="border-t p-4 hover:bg-sidebar-accent/50 transition-colors"
+        >
           <div className="flex items-center">
             <img
               src={currentUser.photoURL || "/placeholder.svg"}
               alt="User avatar"
               className="h-8 w-8 rounded-full"
             />
-            <div className="ml-3">
-              <p className="text-sm font-medium text-sidebar-foreground">
-                {currentUser.displayName}
-              </p>
-              <p className="text-xs text-sidebar-foreground/60">Admin</p>
-            </div>
+            {isOpen && (
+              <div className="ml-3">
+                <p className="text-sm font-medium text-sidebar-foreground">
+                  {currentUser.displayName || "User Profile"}
+                </p>
+                <p className="text-xs text-sidebar-foreground/60">View Profile</p>
+              </div>
+            )}
           </div>
-        </div>
+        </Link>
       )}
     </aside>
   );

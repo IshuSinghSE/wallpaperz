@@ -14,7 +14,10 @@ const DashboardLayout = () => {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="system">
         <div className="flex min-h-screen bg-background transition-colors duration-300">
-          <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
+          {/* Sidebar container with fixed width when open */}
+          <div className={`${sidebarOpen ? 'w-64' : 'w-16'} transition-all duration-300 shrink-0`}>
+            <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
+          </div>
           
           <div className="flex flex-col flex-1 overflow-hidden">
             <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />

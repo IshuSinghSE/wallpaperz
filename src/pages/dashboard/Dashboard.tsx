@@ -1,10 +1,11 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, ImageIcon, Clock, Check, X, RefreshCw } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useDashboardData } from "@/hooks/use-dashboard-data";
 import { Skeleton } from "@/components/ui/skeleton";
+import { convertTimestamp } from "@/lib/react-query";
+import { RefreshButton } from "@/components/ui/refresh-button";
 
 const Dashboard = () => {
   const { 
@@ -33,25 +34,10 @@ const Dashboard = () => {
           <h1 className="text-2xl font-bold">Dashboard</h1>
           <p className="text-muted-foreground">Welcome to the wallpaper admin panel</p>
         </div>
-        <Button 
+        <RefreshButton 
+          isLoading={isFetching}
           onClick={() => refresh()} 
-          size="sm" 
-          variant="outline" 
-          disabled={isFetching}
-          className="backdrop-blur-sm bg-white/10 border-white/20 shadow-lg"
-        >
-          {isFetching ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Refreshing...
-            </>
-          ) : (
-            <>
-              <RefreshCw className="mr-2 h-4 w-4" />
-              Refresh Data
-            </>
-          )}
-        </Button>
+        />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -153,12 +139,12 @@ const Dashboard = () => {
                             <span
                               className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
                                 wallpaper.status === "approved"
-                                  ? "bg-emerald-50 text-emerald-700"
+                                  ? 'bg-emerald-50 text-emerald-700'
                                   : wallpaper.status === "pending"
-                                  ? "bg-amber-50 text-amber-700"
+                                  ? 'bg-amber-50 text-amber-700'
                                   : wallpaper.status === "hidden"
-                                  ? "bg-slate-50 text-slate-700"
-                                  : "bg-rose-50 text-rose-700"
+                                  ? 'bg-slate-50 text-slate-700'
+                                  : 'bg-rose-50 text-rose-800'
                               }`}
                             >
                               {wallpaper.status}
@@ -166,11 +152,7 @@ const Dashboard = () => {
                           </td>
                           <td className="hidden sm:table-cell">{wallpaper.author}</td>
                           <td className="hidden md:table-cell">
-                            {wallpaper.createdAt instanceof Date
-                              ? wallpaper.createdAt.toLocaleDateString()
-                              : wallpaper.createdAt?.toDate
-                                ? wallpaper.createdAt.toDate().toLocaleDateString()
-                                : new Date(wallpaper.createdAt).toLocaleDateString()}
+                            {convertTimestamp(wallpaper.createdAt).toLocaleDateString()}
                           </td>
                           <td>
                             <Link

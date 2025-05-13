@@ -2,7 +2,6 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -19,12 +18,14 @@ import Categories from "@/pages/dashboard/Categories";
 import Collections from "@/pages/dashboard/Collections";
 import Users from "@/pages/dashboard/Users";
 import Settings from "@/pages/dashboard/Settings";
+import UserProfile from "@/pages/dashboard/UserProfile";
 
 // Auth Pages
 import Login from "@/pages/Login";
 import Unauthorized from "@/pages/Unauthorized";
 
-const queryClient = new QueryClient();
+import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "@/lib/react-query";
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -50,6 +51,8 @@ const App = () => (
                 <Route path="/dashboard/collections" element={<Collections />} />
                 <Route path="/dashboard/users" element={<Users />} />
                 <Route path="/dashboard/settings" element={<Settings />} />
+                <Route path="/dashboard/profile" element={<UserProfile />} />
+                <Route path="/dashboard/users/:id" element={<UserProfile />} />
               </Route>
             </Route>
             

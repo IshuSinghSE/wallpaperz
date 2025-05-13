@@ -21,8 +21,8 @@ interface CollectionCardProps {
 
 const CollectionCard = ({ collection, onEdit, onDelete }: CollectionCardProps) => {
   return (
-    <Card className="overflow-hidden backdrop-blur-sm bg-white/5 border border-white/10 shadow-xl transition-all hover:shadow-2xl hover:shadow-primary/5 group">
-      <div className="relative h-40 bg-slate-100 dark:bg-slate-800 group-hover:opacity-90 transition-opacity">
+    <Card className="overflow-hidden backdrop-blur-sm bg-white/5 border border-white/20 dark:border-slate-700/50 shadow-xl transition-all hover:shadow-2xl hover:shadow-primary/5 group">
+      <div className="relative h-40 bg-slate-100 dark:bg-slate-800 group-hover:opacity-90 transition-opacity border-b border-white/10 dark:border-slate-700/50">
         {collection.coverImage ? (
           <img
             src={collection.coverImage}
@@ -37,7 +37,7 @@ const CollectionCard = ({ collection, onEdit, onDelete }: CollectionCardProps) =
         )}
         {collection.type === "auto" && (
           <div className="absolute top-2 left-2">
-            <Badge className="bg-primary/70">Auto</Badge>
+            <Badge className="bg-primary/70 backdrop-blur-sm">Auto</Badge>
           </div>
         )}
       </div>
@@ -53,20 +53,20 @@ const CollectionCard = ({ collection, onEdit, onDelete }: CollectionCardProps) =
             {collection.tags.slice(0, 3).map((tag, i) => (
               <span
                 key={i}
-                className="inline-block rounded-full bg-primary/10 backdrop-blur-sm px-2 py-0.5 text-xs"
+                className="inline-block rounded-full bg-primary/10 backdrop-blur-sm px-2 py-0.5 text-xs border border-white/10 dark:border-slate-700/50"
               >
                 {tag}
               </span>
             ))}
             {collection.tags.length > 3 && (
-              <span className="inline-block rounded-full bg-primary/10 backdrop-blur-sm px-2 py-0.5 text-xs">
+              <span className="inline-block rounded-full bg-primary/10 backdrop-blur-sm px-2 py-0.5 text-xs border border-white/10 dark:border-slate-700/50">
                 +{collection.tags.length - 3} more
               </span>
             )}
           </div>
         )}
       </CardHeader>
-      <CardFooter className="p-4 pt-0 flex justify-between">
+      <CardFooter className="p-4 pt-0 flex justify-between border-t border-white/10 dark:border-slate-700/50 mt-2">
         <div>
           <span className="text-sm text-muted-foreground">
             {collection.wallpaperIds?.length || 0} wallpapers
