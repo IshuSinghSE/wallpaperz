@@ -23,11 +23,13 @@ import {
   DeleteCollectionDialog 
 } from "@/components/collections/CollectionDialogs";
 import { CollectionFormData } from "@/components/collections/CollectionForm";
+import { RefreshButton } from "@/components/ui/refresh-button";
 
 const Collections = () => {
   const { 
     collections, 
     loading, 
+    isFetching,
     hasMore, 
     searchTerm, 
     setSearchTerm,
@@ -81,53 +83,62 @@ const Collections = () => {
   };
 
   const handleAddCollection = async () => {
-    const success = await addCollection({
-      name: formData.name,
-      description: formData.description,
-      coverImage: formData.coverImage,
-      tags: formData.tags,
-      type: formData.type,
-    });
-
-    if (success) {
+    try {
+      await addCollection({
+        name: formData.name,
+        description: formData.description,
+        coverImage: formData.coverImage,
+        tags: formData.tags,
+        type: formData.type,
+      });
+      
       resetForm();
       setIsAddDialogOpen(false);
       // Refresh collections list
       await fetchCollections(true);
+    } catch (error) {
+      console.error("Error adding collection:", error);
     }
   };
 
   const handleEditCollection = async () => {
     if (!currentCollection) return;
 
-    const success = await updateCollection(currentCollection.id, {
-      name: formData.name,
-      description: formData.description,
-      coverImage: formData.coverImage,
-      tags: formData.tags,
-      type: formData.type
-    });
-
-    if (success) {
+    try {
+      await updateCollection(currentCollection.id, {
+        name: formData.name,
+        description: formData.description,
+        coverImage: formData.coverImage,
+        tags: formData.tags,
+        type: formData.type
+      });
+      
       setIsEditDialogOpen(false);
       await fetchCollections(true);
+    } catch (error) {
+      console.error("Error updating collection:", error);
     }
   };
 
   const handleDeleteCollection = async () => {
     if (!currentCollection) return;
 
-    const success = await deleteCollection(currentCollection.id);
-    
-    if (success) {
+    try {
+      await deleteCollection(currentCollection.id);
       setIsDeleteDialogOpen(false);
       await fetchCollections(true);
+    } catch (error) {
+      console.error("Error deleting collection:", error);
     }
   };
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     handleSearch(searchTerm);
+  };
+
+  const handleRefresh = () => {
+    fetchCollections(true);
   };
 
   return (
@@ -140,20 +151,27 @@ const Collections = () => {
           </p>
         </div>
 
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="glassmorphism shadow-lg shadow-primary/20 backdrop-blur-sm">
-              <Plus className="mr-2 h-4 w-4" /> Add Collection
-            </Button>
-          </DialogTrigger>
-          <AddCollectionDialog 
-            isOpen={isAddDialogOpen}
-            onOpenChange={setIsAddDialogOpen}
-            formData={formData}
-            onFormChange={setFormData}
-            onAddCollection={handleAddCollection}
+        <div className="flex items-center gap-2">
+          <RefreshButton 
+            onClick={handleRefresh} 
+            isLoading={isFetching} 
           />
-        </Dialog>
+
+          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="glassmorphism shadow-lg shadow-primary/20 backdrop-blur-sm">
+                <Plus className="mr-2 h-4 w-4" /> Add Collection
+              </Button>
+            </DialogTrigger>
+            <AddCollectionDialog 
+              isOpen={isAddDialogOpen}
+              onOpenChange={setIsAddDialogOpen}
+              formData={formData}
+              onFormChange={setFormData}
+              onAddCollection={handleAddCollection}
+            />
+          </Dialog>
+        </div>
       </div>
 
       <div className="relative mb-6">
@@ -219,7 +237,7 @@ const Collections = () => {
                 onClick={loadMore} 
                 className="glassmorphism shadow-lg shadow-primary/10"
               >
-                {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Load More Collections"}
+                {isFetching ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Load More Collections"}
               </Button>
             </div>
           )}

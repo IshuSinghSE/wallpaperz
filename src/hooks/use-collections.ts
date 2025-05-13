@@ -14,13 +14,15 @@ import {
   startAfter,
   where,
   DocumentData,
-  QueryDocumentSnapshot
+  QueryDocumentSnapshot,
+  serverTimestamp
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Collection } from "@/types";
 import { search } from "@/lib/search";
 import { useToast } from "@/hooks/use-toast";
 import { CACHE_KEYS } from "@/lib/cache-keys";
+import { convertTimestamp } from "@/lib/react-query";
 
 const ITEMS_PER_PAGE = 12;
 
@@ -102,7 +104,7 @@ export const useCollections = () => {
         ...newCollectionData,
         wallpaperIds: [],
         createdBy: "admin", // This would normally come from the current user
-        createdAt: new Date()
+        createdAt: serverTimestamp() // Use Firestore serverTimestamp instead of new Date()
       };
 
       const docRef = await addDoc(collection(db, "collections"), newCollection);
@@ -261,6 +263,15 @@ export const useCollections = () => {
     // The reset will be triggered by the useQuery hook due to queryKey change
   }, []);
 
+  // Fetch collections function - explicitly returning a Promise
+  const fetchCollectionsData = useCallback(async (resetData = false) => {
+    if (resetData) {
+      setLastVisible(null);
+      setHasMore(true);
+    }
+    return await refetch();
+  }, [refetch]);
+
   return {
     collections,
     loading: isLoading,
@@ -269,14 +280,21 @@ export const useCollections = () => {
     searchTerm,
     setSearchTerm,
     handleSearch,
-    addCollection: (newCollectionData: Partial<Collection>) => 
-      addCollectionMutation.mutate(newCollectionData),
-    updateCollection: (id: string, data: Partial<Collection>) => 
-      updateCollectionMutation.mutate({ id, data }),
-    deleteCollection: (id: string) => 
-      deleteCollectionMutation.mutate(id),
+    addCollection: async (newCollectionData: Partial<Collection>) => {
+      await addCollectionMutation.mutateAsync(newCollectionData);
+      return true;
+    },
+    updateCollection: async (id: string, data: Partial<Collection>) => {
+      await updateCollectionMutation.mutateAsync({ id, data });
+      return true;
+    },
+    deleteCollection: async (id: string) => {
+      await deleteCollectionMutation.mutateAsync(id);
+      return true;
+    },
     resetSearch,
     loadMore,
+    fetchCollections: fetchCollectionsData,
     refresh: refetch,
   };
 };
