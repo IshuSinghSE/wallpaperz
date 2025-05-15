@@ -1,3 +1,4 @@
+
 import { Timestamp } from "firebase/firestore";
 
 export type WallpaperStatus = "pending" | "approved" | "rejected" | "hidden";
@@ -22,17 +23,22 @@ export interface Wallpaper {
   description: string;
   isPremium: boolean;
   isAIgenerated: boolean;
-  status: string;
-  createdAt: string;
+  status: WallpaperStatus;
+  createdAt: Timestamp;
   license: string;
   hash: string;
+  aspectRatio: number;
+  // Aliases for backward compatibility
+  get image(): string { return this.imageUrl; }
+  get preview(): string { return this.imageUrl; }
+  get thumbnail(): string { return this.thumbnailUrl; }
 }
 
 export interface Category {
   id: string;
   name: string;
   description?: string;
-  iconUrl?: string;
+  iconUrl: string;
   wallpaperCount: number;
   createdAt: Timestamp;
 }
@@ -51,6 +57,7 @@ export interface Collection {
 
 export interface User {
   uid: string;
+  name?: string;
   email: string;
   displayName: string;
   photoURL: string;
