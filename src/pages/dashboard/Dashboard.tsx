@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, ImageIcon, Clock, Check, X, RefreshCw } from "lucide-react";
@@ -124,7 +125,7 @@ const Dashboard = () => {
                           <td className="w-16">
                             <Link to={`/dashboard/wallpapers/${wallpaper.id}`}>
                               <img
-                                src={wallpaper.thumbnail}
+                                src={wallpaper.thumbnailUrl || wallpaper.thumbnail}
                                 alt={wallpaper.name}
                                 className="h-12 w-12 rounded-md object-cover"
                               />

@@ -1,8 +1,7 @@
-
 import { useEffect, useState } from "react";
 import { collection, getDocs, query, where, updateDoc, doc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { Wallpaper } from "@/types";
+import { Wallpaper, WallpaperStatus } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
@@ -44,7 +43,7 @@ const PendingApproval = () => {
     fetchPendingWallpapers();
   }, [toast]);
 
-  const handleStatusChange = async (id: string, status: "approved" | "rejected") => {
+  const handleStatusChange = async (id: string, status: WallpaperStatus) => {
     try {
       setProcessingIds(prev => new Set(prev).add(id));
       
@@ -110,7 +109,7 @@ const PendingApproval = () => {
             <Card key={wallpaper.id} className="overflow-hidden shadow-md border border-slate-100 dark:border-slate-800">
               <div className="aspect-[3/4] relative">
                 <img
-                  src={wallpaper.thumbnail}
+                  src={wallpaper.thumbnailUrl || wallpaper.thumbnail}
                   alt={wallpaper.name}
                   className="h-full w-full object-cover"
                 />

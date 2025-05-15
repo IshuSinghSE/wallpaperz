@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Wallpaper, WallpaperStatus } from "@/types";
@@ -211,7 +210,7 @@ const WallpaperList = () => {
                 >
                   <div className="aspect-[3/4] relative">
                     <img
-                      src={wallpaper.thumbnail}
+                      src={wallpaper.thumbnailUrl || wallpaper.thumbnail}
                       alt={wallpaper.name}
                       className="h-full w-full object-cover"
                       loading="lazy"
@@ -219,7 +218,7 @@ const WallpaperList = () => {
                     <div className="absolute top-2 right-2">
                       <span
                         className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusBadgeClass(
-                          wallpaper.status
+                          wallpaper.status as WallpaperStatus
                         )} shadow-md`}
                       >
                         {wallpaper.status}
