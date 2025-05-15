@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import NotFound from "./pages/NotFound";
+import Landing from "./pages/Landing";
 
 // Dashboard Components
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
@@ -36,6 +37,7 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             {/* Public routes */}
+            <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
             
@@ -55,9 +57,6 @@ const App = () => (
                 <Route path="/dashboard/users/:id" element={<UserProfile />} />
               </Route>
             </Route>
-            
-            {/* Redirect root to dashboard */}
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
             
             {/* Catch all other routes */}
             <Route path="*" element={<NotFound />} />
