@@ -28,10 +28,10 @@ export interface Wallpaper {
   license: string;
   hash: string;
   aspectRatio: number;
-  // Aliases for backward compatibility
-  get image(): string { return this.imageUrl; }
-  get preview(): string { return this.imageUrl; }
-  get thumbnail(): string { return this.thumbnailUrl; }
+  // We'll define these as regular properties instead of getters for compatibility
+  image?: string;
+  preview?: string;
+  thumbnail?: string;
 }
 
 export interface Category {

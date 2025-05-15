@@ -12,6 +12,10 @@ interface WallpaperPreviewProps {
 }
 
 const WallpaperPreview = ({ wallpaper, className }: WallpaperPreviewProps) => {
+  // Use thumbnailUrl or fallbacks
+  const thumbnailSrc = wallpaper.thumbnailUrl || wallpaper.thumbnail;
+  const imageSrc = wallpaper.imageUrl || wallpaper.image;
+
   return (
     <div className={cn("rounded-lg border bg-card text-card-foreground shadow-sm", className)}>
       <div className="p-4 border-b">
@@ -38,15 +42,15 @@ const WallpaperPreview = ({ wallpaper, className }: WallpaperPreviewProps) => {
         <TabsContent value="desktop" className="p-4 space-y-4 mt-2">
           <div className="border rounded-lg overflow-hidden bg-background/50">
             <AspectRatio ratio={16 / 9} className="bg-muted">
-              {wallpaper.thumbnailUrl ? (
+              {thumbnailSrc ? (
                 <img
-                  src={wallpaper.thumbnailUrl}
+                  src={thumbnailSrc}
                   alt={wallpaper.name || "Wallpaper preview"}
                   className="h-full w-full object-cover"
                 />
-              ) : wallpaper.imageUrl ? (
+              ) : imageSrc ? (
                 <img
-                  src={wallpaper.imageUrl}
+                  src={imageSrc}
                   alt={wallpaper.name || "Wallpaper"}
                   className="h-full w-full object-cover"
                 />
@@ -69,15 +73,15 @@ const WallpaperPreview = ({ wallpaper, className }: WallpaperPreviewProps) => {
         <TabsContent value="mobile" className="p-4 space-y-4 mt-2">
           <div className="border rounded-lg overflow-hidden max-w-[250px] mx-auto bg-background/50">
             <AspectRatio ratio={9 / 16} className="bg-muted">
-              {wallpaper.thumbnailUrl ? (
+              {thumbnailSrc ? (
                 <img
-                  src={wallpaper.thumbnailUrl}
+                  src={thumbnailSrc}
                   alt={wallpaper.name || "Mobile preview"}
                   className="h-full w-full object-cover"
                 />
-              ) : wallpaper.imageUrl ? (
+              ) : imageSrc ? (
                 <img
-                  src={wallpaper.imageUrl}
+                  src={imageSrc}
                   alt={wallpaper.name || "Wallpaper"}
                   className="h-full w-full object-cover"
                 />
