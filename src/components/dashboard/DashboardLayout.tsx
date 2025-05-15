@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
@@ -7,10 +7,12 @@ import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/lib/react-query";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
 
 const DashboardLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const isMobile = useIsMobile();
+  const mainContentRef = useRef<HTMLDivElement>(null);
 
   // Auto-close sidebar on mobile when component mounts
   useEffect(() => {
@@ -21,6 +23,26 @@ const DashboardLayout = () => {
     }
   }, [isMobile]);
 
+  // Handle clicks on the main content area to close sidebar on mobile
+  useEffect(() => {
+    const handleMainContentClick = () => {
+      if (isMobile && sidebarOpen) {
+        setSidebarOpen(false);
+      }
+    };
+
+    const mainContent = mainContentRef.current;
+    if (mainContent) {
+      mainContent.addEventListener("click", handleMainContentClick);
+    }
+
+    return () => {
+      if (mainContent) {
+        mainContent.removeEventListener("click", handleMainContentClick);
+      }
+    };
+  }, [isMobile, sidebarOpen]);
+
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="system">
@@ -30,6 +52,7 @@ const DashboardLayout = () => {
           
           {/* Main content area - pushes away on desktop, overlaps on mobile */}
           <div 
+            ref={mainContentRef}
             className={cn(
               "flex flex-col flex-1 transition-all duration-300",
               !isMobile && sidebarOpen ? "ml-64" : !isMobile ? "ml-16" : "ml-0"
@@ -48,8 +71,5 @@ const DashboardLayout = () => {
     </QueryClientProvider>
   );
 };
-
-// Import the cn utility since we're using it
-import { cn } from "@/lib/utils";
 
 export default DashboardLayout;

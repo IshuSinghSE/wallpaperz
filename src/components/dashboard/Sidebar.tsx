@@ -3,6 +3,7 @@ import { NavLink, Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useEffect, useRef } from "react";
 import { 
   LayoutDashboard, 
   ImageIcon, 
@@ -51,6 +52,7 @@ interface SidebarProps {
 const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
   const { currentUser } = useAuth();
   const isMobile = useIsMobile();
+  const sidebarRef = useRef<HTMLElement>(null);
 
   const navItems = [
     { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
@@ -63,8 +65,23 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
     { to: "/dashboard/settings", icon: Settings, label: "Settings" },
   ];
 
+  // Handle clicks outside the sidebar to close it on mobile
+  useEffect(() => {
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (isMobile && isOpen && sidebarRef.current && !sidebarRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, [isMobile, isOpen, setIsOpen]);
+
   return (
     <aside
+      ref={sidebarRef}
       className={cn(
         "fixed inset-y-0 left-0 z-50 flex flex-col border-r border-white/20 dark:border-slate-800/50 transition-all duration-300 ease-in-out glassmorphism backdrop-blur-md",
         isOpen ? "w-64" : "w-16",
