@@ -3,7 +3,7 @@ import React from "react";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Wallpaper } from "@/types";
 import { cn } from "@/lib/utils";
-import { Monitor, Smartphone, AspectRatio as AspectRatioIcon } from "lucide-react";
+import { Monitor, Smartphone, LayoutPanelTop } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface WallpaperPreviewProps {
@@ -16,7 +16,7 @@ const WallpaperPreview = ({ wallpaper, className }: WallpaperPreviewProps) => {
     <div className={cn("rounded-lg border bg-card text-card-foreground shadow-sm", className)}>
       <div className="p-4 border-b">
         <h3 className="text-lg font-semibold leading-none tracking-tight flex items-center gap-2">
-          <AspectRatioIcon className="h-4 w-4" />
+          <LayoutPanelTop className="h-4 w-4" />
           Preview
         </h3>
       </div>
