@@ -1,4 +1,3 @@
-
 import { useCallback, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { 
@@ -120,10 +119,33 @@ export const useWallpapers = ({
         const lastVisibleDoc = querySnapshot.docs[querySnapshot.docs.length - 1];
         setLastVisible(lastVisibleDoc);
         
-        const wallpaperData = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data() as DocumentData
-        })) as Wallpaper[];
+        const wallpaperData = querySnapshot.docs.map(doc => {
+          const data = doc.data();
+          // Map Firestore field names to our schema field names if needed
+          return {
+            id: doc.id,
+            name: data.name,
+            imageUrl: data.image || data.imageUrl,
+            thumbnailUrl: data.thumbnail || data.thumbnailUrl,
+            downloads: data.downloads || 0,
+            likes: data.likes || 0,
+            size: data.size || 0,
+            resolution: data.resolution || "",
+            orientation: data.orientation || "",
+            category: data.category || "",
+            tags: data.tags || [],
+            colors: data.colors || [],
+            author: data.author || "",
+            authorImage: data.authorImage || "",
+            description: data.description || "",
+            isPremium: data.isPremium || false,
+            isAIgenerated: data.isAIgenerated || false,
+            status: data.status || "pending",
+            createdAt: data.createdAt ? data.createdAt.toDate().toISOString() : new Date().toISOString(),
+            license: data.license || "",
+            hash: data.hash || doc.id
+          } as Wallpaper;
+        });
         
         setHasMore(querySnapshot.docs.length === pageSize);
         return wallpaperData;
@@ -173,10 +195,33 @@ export const useWallpapers = ({
         const lastVisibleDoc = querySnapshot.docs[querySnapshot.docs.length - 1];
         setLastVisible(lastVisibleDoc);
         
-        const newWallpapers = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data() as DocumentData
-        })) as Wallpaper[];
+        const newWallpapers = querySnapshot.docs.map(doc => {
+          const data = doc.data();
+          // Map Firestore field names to our schema field names if needed
+          return {
+            id: doc.id,
+            name: data.name,
+            imageUrl: data.image || data.imageUrl,
+            thumbnailUrl: data.thumbnail || data.thumbnailUrl,
+            downloads: data.downloads || 0,
+            likes: data.likes || 0,
+            size: data.size || 0,
+            resolution: data.resolution || "",
+            orientation: data.orientation || "",
+            category: data.category || "",
+            tags: data.tags || [],
+            colors: data.colors || [],
+            author: data.author || "",
+            authorImage: data.authorImage || "",
+            description: data.description || "",
+            isPremium: data.isPremium || false,
+            isAIgenerated: data.isAIgenerated || false,
+            status: data.status || "pending",
+            createdAt: data.createdAt ? data.createdAt.toDate().toISOString() : new Date().toISOString(),
+            license: data.license || "",
+            hash: data.hash || doc.id
+          } as Wallpaper;
+        });
         
         setHasMore(querySnapshot.docs.length === pageSize);
         

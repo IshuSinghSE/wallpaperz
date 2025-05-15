@@ -1,4 +1,3 @@
-
 import { Timestamp } from "firebase/firestore";
 
 export type WallpaperStatus = "pending" | "approved" | "rejected" | "hidden";
@@ -7,29 +6,24 @@ export type AuthProvider = "google" | "apple" | "email";
 export interface Wallpaper {
   id: string;
   name: string;
-  image: string;
-  thumbnail: string;
-  preview: string;
-  blurHash: string;
+  imageUrl: string;
+  thumbnailUrl: string;
   downloads: number;
   likes: number;
-  views: number;
+  views?: number;
   size: number;
   resolution: string;
-  aspectRatio: number;
   orientation: string;
   category: string;
-  collections: string[];
   tags: string[];
   colors: string[];
   author: string;
   authorImage: string;
-  uploadedBy: string;
   description: string;
   isPremium: boolean;
   isAIgenerated: boolean;
-  status: WallpaperStatus;
-  createdAt: Timestamp;
+  status: string;
+  createdAt: string;
   license: string;
   hash: string;
 }
