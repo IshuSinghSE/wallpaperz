@@ -67,12 +67,16 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// Dashboard specific colors
-				'dashboard-dark': '#1A1F2C',
-				'dashboard-purple': {
-					DEFAULT: '#8B5CF6',
-					light: '#9b87f5',
-					dark: '#7E69AB',
+				// Modern gradient system
+				'gradient-primary': 'hsl(var(--gradient-primary))',
+				'gradient-secondary': 'hsl(var(--gradient-secondary))',
+				'gradient-accent': 'hsl(var(--gradient-accent))',
+				
+				// Dashboard specific colors using HSL
+				'dashboard': {
+					'bg': 'hsl(var(--dashboard-bg))',
+					'surface': 'hsl(var(--dashboard-surface))',
+					'border': 'hsl(var(--dashboard-border))',
 				},
 			},
 			borderRadius: {
