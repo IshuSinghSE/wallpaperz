@@ -44,7 +44,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Edit, Trash2, Search, Filter, Loader2, User as UserIcon, X } from "lucide-react";
+import { Edit, Trash2, Search, Filter, Loader2, User as UserIcon, X } from '@/lib/icons';
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 

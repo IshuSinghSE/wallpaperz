@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { Collection } from "@/types";
-import { X } from "lucide-react";
+import { X } from '@/lib/icons';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";

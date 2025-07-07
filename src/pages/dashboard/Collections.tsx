@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { Collection } from "@/types";
 import { useCollections } from "@/hooks/use-collections";
-import { Search, X, Plus, Loader2 } from "lucide-react";
+import { Search, X, Plus, Loader2 } from '@/lib/icons';
 import {
   Card,
   CardContent,

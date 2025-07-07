@@ -1,8 +1,7 @@
+import React, { memo } from 'react';
+import { Facebook, Instagram, Twitter } from '@/lib/icons';
 
-import React from 'react';
-import { Facebook, Instagram, Twitter } from 'lucide-react';
-
-const Footer = () => {
+const Footer = memo(() => {
   return (
     <footer className="py-12 bg-dashboard-dark/80 border-t border-white/10">
       <div className="container mx-auto px-4">
@@ -18,6 +17,7 @@ const Footer = () => {
           
           <div className="flex flex-col md:flex-row items-center gap-4 md:gap-8">
             <a href="#" className="text-gray-400 hover:text-white transition">Home</a>
+            <a href="https://github.com/IshuSinghSE/bloomsplash/releases/latest/" className="text-gray-400 hover:text-white transition">Download</a>
             <a href="#features" className="text-gray-400 hover:text-white transition">Features</a>
             <a href="#wallpapers" className="text-gray-400 hover:text-white transition">Wallpapers</a>
             <a href="#why-bloomsplash" className="text-gray-400 hover:text-white transition">Why Bloomsplash</a>
@@ -51,6 +51,6 @@ const Footer = () => {
       </div>
     </footer>
   );
-};
+});
 
 export default Footer;

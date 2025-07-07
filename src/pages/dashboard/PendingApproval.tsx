@@ -5,7 +5,7 @@ import { Wallpaper, WallpaperStatus } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Check, X, Loader2 } from "lucide-react";
+import { Check, X, Loader2 } from '@/lib/icons';
 import { Link } from "react-router-dom";
 
 const PendingApproval = () => {

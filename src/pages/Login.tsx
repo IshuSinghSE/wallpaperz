@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, AlertTriangle } from "lucide-react";
+import { Loader2, AlertTriangle } from '@/lib/icons';
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 const Login = () => {
@@ -21,17 +21,25 @@ const Login = () => {
         title: "Signed in successfully",
         description: "Welcome to the Admin Dashboard!"
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error signing in with Google:", error);
-      
+
       // Show Firebase config alert if the error is related to API key
-      if (error.code === "auth/api-key-not-valid.-please-pass-a-valid-api-key.") {
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "code" in error &&
+        (error as { code?: string }).code === "auth/api-key-not-valid.-please-pass-a-valid-api-key."
+      ) {
         setShowConfigAlert(true);
       }
-      
+
       toast({
         title: "Authentication failed",
-        description: error.message || "There was a problem signing in. Please try again.",
+        description:
+          typeof error === "object" && error !== null && "message" in error
+            ? (error as { message?: string }).message
+            : "There was a problem signing in. Please try again.",
         variant: "destructive"
       });
     } finally {

@@ -18,7 +18,7 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { Check, X, Edit, Loader2, Search, RefreshCw } from "lucide-react";
+import { Check, X, Edit, Loader2, Search, RefreshCw } from '@/lib/icons';
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { useWallpapers } from "@/hooks/use-wallpapers";

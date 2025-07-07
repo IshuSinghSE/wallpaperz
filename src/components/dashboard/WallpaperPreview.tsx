@@ -3,7 +3,7 @@ import React from "react";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Wallpaper } from "@/types";
 import { cn } from "@/lib/utils";
-import { Monitor, Smartphone, LayoutPanelTop } from "lucide-react";
+import { Monitor, Smartphone, LayoutPanelTop } from '@/lib/icons';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface WallpaperPreviewProps {

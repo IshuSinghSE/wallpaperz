@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Collection } from "@/types";
-import { Edit, Trash2, Image } from "lucide-react";
+import { Edit, Trash2, Image } from '@/lib/icons';
 import {
   Card,
   CardContent,

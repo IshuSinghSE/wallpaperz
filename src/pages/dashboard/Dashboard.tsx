@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, ImageIcon, Clock, Check, X, RefreshCw } from "lucide-react";
+import { Loader2, ImageIcon, Clock, Check, X, RefreshCw } from '@/lib/icons';
 import { Link } from "react-router-dom";
 import { useDashboardData } from "@/hooks/use-dashboard-data";
 import { Skeleton } from "@/components/ui/skeleton";

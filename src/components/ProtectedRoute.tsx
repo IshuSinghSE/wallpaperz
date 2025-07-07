@@ -1,7 +1,7 @@
 
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate, Outlet } from "react-router-dom";
-import { Loader2 } from "lucide-react";
+import { Loader2 } from '@/lib/icons';
 
 interface ProtectedRouteProps {
   requireAdmin?: boolean;

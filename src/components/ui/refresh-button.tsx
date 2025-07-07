@@ -1,6 +1,6 @@
 
 import { Button, ButtonProps } from "@/components/ui/button";
-import { Loader2, RefreshCw } from "lucide-react";
+import { Loader2, RefreshCw } from '@/lib/icons';
 import { cn } from "@/lib/utils";
 
 interface RefreshButtonProps extends ButtonProps {

@@ -10,10 +10,10 @@ const AnimatedLogo = () => {
   return (
     <div className={`relative flex items-center justify-center transition-all duration-1000 ${isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
       <svg
-        width="300"
-        height="80"
-        viewBox="0 0 300 80"
-        className="overflow-visible"
+        width="450"
+        height="90"
+        viewBox="0 0 450 90"
+        className="overflow-visible w-full max-w-2xl"
       >
         {/* Glow background */}
         <defs>
@@ -45,10 +45,10 @@ const AnimatedLogo = () => {
         
         {/* Background blur for neon effect */}
         <text
-          x="150"
-          y="45"
+          x="225"
+          y="55"
           textAnchor="middle"
-          className="text-4xl font-bold tracking-wider"
+          className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-wider"
           fill="url(#textGradient)"
           filter="url(#glow)"
           opacity="0.6"
@@ -58,10 +58,10 @@ const AnimatedLogo = () => {
         
         {/* Main text */}
         <text
-          x="150"
-          y="45"
+          x="225"
+          y="55"
           textAnchor="middle"
-          className="text-4xl font-bold tracking-wider animate-pulse"
+          className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-wider animate-pulse"
           fill="url(#textGradient)"
           filter="url(#neonGlow)"
         >
@@ -72,9 +72,9 @@ const AnimatedLogo = () => {
         {[...Array(6)].map((_, i) => (
           <circle
             key={i}
-            cx={50 + i * 40}
-            cy={20 + Math.sin(i) * 10}
-            r="2"
+            cx={60 + i * 55}
+            cy={20 + Math.sin(i) * 8}
+            r="2.5"
             fill="url(#textGradient)"
             opacity="0.8"
             className="animate-pulse"
@@ -85,7 +85,7 @@ const AnimatedLogo = () => {
           >
             <animate
               attributeName="cy"
-              values={`${20 + Math.sin(i) * 10};${15 + Math.sin(i) * 10};${20 + Math.sin(i) * 10}`}
+              values={`${20 + Math.sin(i) * 8};${15 + Math.sin(i) * 8};${20 + Math.sin(i) * 8}`}
               dur={`${3 + i * 0.5}s`}
               repeatCount="indefinite"
             />

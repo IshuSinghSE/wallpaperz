@@ -7,16 +7,16 @@ import {
 } from "@/components/ui/carousel";
 import { cn } from '@/lib/utils';
 
-// Sample wallpaper images - you'll want to replace these with your actual wallpapers
+// Sample wallpaper images - using Unsplash API for high-quality wallpapers
+// Local wallpaper images - optimized WebP format
 const wallpapers = [
-  "/placeholder.svg",
-  "/placeholder.svg",
-  "/placeholder.svg",
-  "/placeholder.svg",
-  "/placeholder.svg",
-  "/placeholder.svg",
-  "/placeholder.svg",
-  "/placeholder.svg",
+  "/wallpapers/wallpaper_01.webp",
+  "/wallpapers/wallpaper_02.webp",
+  "/wallpapers/wallpaper_03.webp",
+  "/wallpapers/wallpaper_04.webp",
+  "/wallpapers/wallpaper_05.webp",
+  "/wallpapers/wallpaper_06.webp",
+  "/wallpapers/wallpaper_07.webp",
 ];
 
 const DiagonalCarousel = () => {

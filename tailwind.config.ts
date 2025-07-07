@@ -1,5 +1,6 @@
 
 import type { Config } from "tailwindcss";
+import tailwindcssAnimate from "tailwindcss-animate";
 
 export default {
 	darkMode: ["class"],
@@ -128,7 +129,8 @@ export default {
 			backdropBlur: {
 				xs: '2px',
 			}
-		},
+		}
 	},
-	plugins: [require("tailwindcss-animate")],
+	plugins: [tailwindcssAnimate],
+
 } satisfies Config;

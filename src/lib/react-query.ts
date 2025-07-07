@@ -19,12 +19,19 @@ export const queryClient = new QueryClient({
 });
 
 // Helper function to safely convert Firestore timestamps
-export const convertTimestamp = (timestamp: any): Date => {
+export const convertTimestamp = (
+  timestamp: Timestamp | Date | number | string | null | undefined
+): Date => {
   if (!timestamp) return new Date();
   
-  // If timestamp has toDate() method (Firestore Timestamp)
-  if (timestamp.toDate && typeof timestamp.toDate === 'function') {
-    return timestamp.toDate();
+  // If timestamp is a Firestore Timestamp
+  if (
+    typeof timestamp === 'object' &&
+    timestamp !== null &&
+    'toDate' in timestamp &&
+    typeof (timestamp as Timestamp).toDate === 'function'
+  ) {
+    return (timestamp as Timestamp).toDate();
   }
   
   // If timestamp is already a Date object
@@ -33,18 +40,26 @@ export const convertTimestamp = (timestamp: any): Date => {
   }
   
   // If timestamp is a number or string
-  return new Date(timestamp);
+  if (typeof timestamp === 'number' || typeof timestamp === 'string') {
+    return new Date(timestamp);
+  }
+  // If timestamp is an unexpected object (not a Firestore Timestamp or Date), return current date
+  return new Date();
 };
 
 // Helper function to handle server timestamp in mutations
-export const prepareTimestampForFirestore = (data: any): any => {
+export const prepareTimestampForFirestore = (data: unknown): unknown => {
+  if (typeof data !== 'object' || data === null) {
+    return data;
+  }
+
   // Deep clone to avoid modifying original object
-  const result = { ...data };
+  const result: Record<string, unknown> = { ...(data as Record<string, unknown>) };
   
   // Convert Date objects to Firestore Timestamp
   Object.keys(result).forEach(key => {
     if (result[key] instanceof Date) {
-      result[key] = Timestamp.fromDate(result[key]);
+      result[key] = Timestamp.fromDate(result[key] as Date);
     } else if (typeof result[key] === 'object' && result[key] !== null) {
       result[key] = prepareTimestampForFirestore(result[key]);
     }

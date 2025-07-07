@@ -1,5 +1,5 @@
 
-import { Moon, Sun } from "lucide-react";
+import { Moon, Sun } from '@/lib/icons';
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/theme/ThemeProvider";
 

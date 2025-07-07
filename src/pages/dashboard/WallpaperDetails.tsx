@@ -30,7 +30,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Edit, Trash2, ArrowUp, ArrowDown, Check, X, Download, Replace } from "lucide-react";
+import { Edit, Trash2, ArrowUp, ArrowDown, Check, X, Download, Replace } from '@/lib/icons';
 import { format } from "date-fns";
 import { 
   Form,

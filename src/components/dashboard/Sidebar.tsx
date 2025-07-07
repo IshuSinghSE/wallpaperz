@@ -4,18 +4,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useEffect, useRef } from "react";
-import { 
-  LayoutDashboard, 
-  ImageIcon, 
-  Upload, 
-  Clock, 
-  FolderIcon, 
-  Users, 
-  Settings, 
-  ChevronLeft, 
-  ChevronRight,
-  User
-} from "lucide-react";
+import { LayoutDashboard, ImageIcon, Upload, Clock, FolderIcon, Users, Settings, ChevronLeft, ChevronRight, User } from '@/lib/icons';
 
 interface NavItemProps {
   to: string;

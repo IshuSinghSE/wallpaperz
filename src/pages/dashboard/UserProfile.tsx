@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
-import { Pencil, Upload, Loader2, User, Image as ImageIcon } from "lucide-react";
+import { Pencil, Upload, Loader2, User, Image as ImageIcon } from '@/lib/icons';
 import { useToast } from "@/hooks/use-toast";
 import { RefreshButton } from "@/components/ui/refresh-button";
 import { useUserProfile } from "@/hooks/use-user-profile";
