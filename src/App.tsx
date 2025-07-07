@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import AdminProtectedRoute from "@/components/AdminProtectedRoute";
 import NotFound from "./pages/NotFound";
 import Landing from "./pages/Landing";
 
@@ -24,6 +25,7 @@ import UserProfile from "@/pages/dashboard/UserProfile";
 // Auth Pages
 import Login from "@/pages/Login";
 import Unauthorized from "@/pages/Unauthorized";
+import AdminAccess from "@/pages/AdminAccess";
 
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/lib/react-query";
@@ -38,23 +40,28 @@ const App = () => (
           <Routes>
             {/* Public routes */}
             <Route path="/" element={<Landing />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/unauthorized" element={<Unauthorized />} />
+            <Route path="/admin" element={<AdminAccess />} />
             
-            {/* Protected dashboard routes */}
-            <Route element={<ProtectedRoute requireAdmin={true} />}>
-              <Route element={<DashboardLayout />}>
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/dashboard/wallpapers" element={<WallpaperList />} />
-                <Route path="/dashboard/wallpapers/:id" element={<WallpaperDetails />} />
-                <Route path="/dashboard/upload" element={<WallpaperUpload />} />
-                <Route path="/dashboard/pending" element={<PendingApproval />} />
-                <Route path="/dashboard/categories" element={<Categories />} />
-                <Route path="/dashboard/collections" element={<Collections />} />
-                <Route path="/dashboard/users" element={<Users />} />
-                <Route path="/dashboard/settings" element={<Settings />} />
-                <Route path="/dashboard/profile" element={<UserProfile />} />
-                <Route path="/dashboard/users/:id" element={<UserProfile />} />
+            {/* Admin protected routes */}
+            <Route element={<AdminProtectedRoute />}>
+              <Route path="/login" element={<Login />} />
+              <Route path="/unauthorized" element={<Unauthorized />} />
+              
+              {/* Protected dashboard routes */}
+              <Route element={<ProtectedRoute requireAdmin={true} />}>
+                <Route element={<DashboardLayout />}>
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/dashboard/wallpapers" element={<WallpaperList />} />
+                  <Route path="/dashboard/wallpapers/:id" element={<WallpaperDetails />} />
+                  <Route path="/dashboard/upload" element={<WallpaperUpload />} />
+                  <Route path="/dashboard/pending" element={<PendingApproval />} />
+                  <Route path="/dashboard/categories" element={<Categories />} />
+                  <Route path="/dashboard/collections" element={<Collections />} />
+                  <Route path="/dashboard/users" element={<Users />} />
+                  <Route path="/dashboard/settings" element={<Settings />} />
+                  <Route path="/dashboard/profile" element={<UserProfile />} />
+                  <Route path="/dashboard/users/:id" element={<UserProfile />} />
+                </Route>
               </Route>
             </Route>
             

@@ -54,15 +54,6 @@ const Landing = () => {
               Bloomsplash
             </span>
           </div>
-          <div>
-            <Button 
-              variant="outline" 
-              className="glassmorphism border-white/20 text-white hover:bg-white/10"
-              onClick={handleSignIn}
-            >
-              Sign In
-            </Button>
-          </div>
         </header>
 
         {/* Hero Section */}
@@ -75,15 +66,6 @@ const Landing = () => {
               Explore, Create, Share Ultra 4K Wallpapers for your device
             </p>
             
-            <Button 
-              size="lg" 
-              className="animate-fade-in mt-8 bg-dashboard-purple hover:bg-dashboard-purple-light flex items-center gap-2"
-              onClick={handleSignIn}
-              style={{animationDelay: "0.4s"}}
-            >
-              Continue with Google
-              <ArrowRight className="ml-1 h-4 w-4" />
-            </Button>
           </div>
 
           <div className="w-full overflow-hidden">
@@ -110,14 +92,6 @@ const Landing = () => {
               <p className="text-lg mb-8 text-gray-300">
                 Join thousands of users who have already discovered the perfect wallpapers for their devices.
               </p>
-              <Button 
-                size="lg" 
-                className="bg-dashboard-purple hover:bg-dashboard-purple-light flex items-center gap-2"
-                onClick={handleSignIn}
-              >
-                Continue with Google
-                <ArrowRight className="ml-1 h-4 w-4" />
-              </Button>
             </div>
           </div>
         </section>
