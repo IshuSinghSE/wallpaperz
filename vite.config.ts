@@ -30,11 +30,9 @@ export default defineConfig(({ mode }) => ({
             return 'react-core';
           }
           
-          // Firebase chunks
-          if (id.includes('firebase')) {
-            if (id.includes('auth')) return 'firebase-auth';
-            if (id.includes('firestore')) return 'firebase-firestore';
-            if (id.includes('app')) return 'firebase-app';
+          // Firebase chunks - Keep all Firebase modules together to avoid initialization issues
+          if (id.includes('firebase') || id.includes('@firebase')) {
+            return 'firebase-core';
           }
           
           // UI library chunks
