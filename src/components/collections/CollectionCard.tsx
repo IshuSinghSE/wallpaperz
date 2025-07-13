@@ -20,9 +20,12 @@ interface CollectionCardProps {
 }
 
 const CollectionCard = ({ collection, onEdit, onDelete }: CollectionCardProps) => {
+  const handleNavigate = () => {
+    window.location.href = `/dashboard/collections/${collection.id}`;
+  };
   return (
     <Card className="overflow-hidden backdrop-blur-sm bg-white/5 border border-white/20 dark:border-slate-700/50 shadow-xl transition-all hover:shadow-2xl hover:shadow-primary/5 group">
-      <div className="relative h-40 bg-slate-100 dark:bg-slate-800 group-hover:opacity-90 transition-opacity border-b border-white/10 dark:border-slate-700/50">
+      <div className="relative h-40 bg-slate-100 dark:bg-slate-800 group-hover:opacity-90 transition-opacity border-b border-white/10 dark:border-slate-700/50 cursor-pointer" onClick={handleNavigate}>
         {collection.coverImage ? (
           <img
             src={collection.coverImage}

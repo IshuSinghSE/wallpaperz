@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Collection } from "@/types";
 import { useCollections } from "@/hooks/use-collections";
@@ -47,13 +46,27 @@ const Collections = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [currentCollection, setCurrentCollection] = useState<Collection | null>(null);
   
-  const [formData, setFormData] = useState<CollectionFormData>({
-    name: "",
-    description: "",
-    coverImage: "",
-    tags: [],
-    type: "manual",
-  });
+type ExtendedCollectionFormData = {
+  name: string;
+  description: string;
+  coverImage: string;
+  tags: string[];
+  type: "auto" | "manual";
+  wallpaperIds: string[];
+  createdAt: string;
+  createdBy: string;
+};
+
+const [formData, setFormData] = useState<ExtendedCollectionFormData>({
+  name: "",
+  description: "",
+  coverImage: "",
+  tags: [],
+  type: "manual",
+  wallpaperIds: [],
+  createdAt: "",
+  createdBy: "",
+});
 
   const resetForm = () => {
     setFormData({
@@ -61,7 +74,10 @@ const Collections = () => {
       description: "",
       coverImage: "",
       tags: [],
-      type: "manual"
+      type: "manual",
+      wallpaperIds: [],
+      createdAt: "",
+      createdBy: "",
     });
   };
 
@@ -72,7 +88,10 @@ const Collections = () => {
       description: collection.description || "",
       coverImage: collection.coverImage || "",
       tags: collection.tags || [],
-      type: collection.type || "manual",
+      type: (collection.type as "auto" | "manual") || "manual",
+      wallpaperIds: collection.wallpaperIds || [],
+      createdAt: collection.createdAt || "",
+      createdBy: collection.createdBy || "",
     });
     setIsEditDialogOpen(true);
   };
@@ -90,11 +109,12 @@ const Collections = () => {
         coverImage: formData.coverImage,
         tags: formData.tags,
         type: formData.type,
+        wallpaperIds: formData.wallpaperIds,
+        createdAt: new Date().toISOString(),
+        createdBy: formData.createdBy || "admin",
       });
-      
       resetForm();
       setIsAddDialogOpen(false);
-      // Refresh collections list
       await fetchCollections(true);
     } catch (error) {
       console.error("Error adding collection:", error);
@@ -110,9 +130,11 @@ const Collections = () => {
         description: formData.description,
         coverImage: formData.coverImage,
         tags: formData.tags,
-        type: formData.type
+        type: formData.type,
+        wallpaperIds: formData.wallpaperIds,
+        createdAt: formData.createdAt,
+        createdBy: formData.createdBy,
       });
-      
       setIsEditDialogOpen(false);
       await fetchCollections(true);
     } catch (error) {

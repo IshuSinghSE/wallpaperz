@@ -125,7 +125,7 @@ const Dashboard = () => {
                           <td className="w-16">
                             <Link to={`/dashboard/wallpapers/${wallpaper.id}`}>
                               <img
-                                src={wallpaper.thumbnailUrl || wallpaper.thumbnail}
+                                src={wallpaper.thumbnail}
                                 alt={wallpaper.name}
                                 className="h-12 w-12 rounded-md object-cover"
                               />

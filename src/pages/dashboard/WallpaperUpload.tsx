@@ -1,60 +1,100 @@
-
 import { useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { doc, setDoc, Timestamp } from "firebase/firestore";
+import { doc, setDoc } from "firebase/firestore";
 import { db, storage } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Loader2, Upload, X, Plus } from '@/lib/icons';
 import { useToast } from "@/hooks/use-toast";
+import { Label } from "@/components/ui/label";
 
 const WallpaperUpload = () => {
   const { currentUser } = useAuth();
   const { toast } = useToast();
   
   const [formData, setFormData] = useState({
-    name: "",
+    name: "untitled",
     description: "",
-    author: "",
+    author: "bloomsplash",
     resolution: "",
+    size: 0,
     license: "Standard",
-    category: "",
+    category: "abstract",
     tags: [] as string[],
     colors: [] as string[],
     collections: [] as string[],
     isPremium: false,
     isAIgenerated: false,
+    status: "pending",
   });
   
   const [originalFile, setOriginalFile] = useState<File | null>(null);
-  const [previewFile, setPreviewFile] = useState<File | null>(null);
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  
   
   const [tagInput, setTagInput] = useState("");
   const [colorInput, setColorInput] = useState("#000000");
   
   const [uploading, setUploading] = useState(false);
+  const [thumbnailLoading, setThumbnailLoading] = useState(false);
   
   // Handle file selection
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, fileType: string) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, fileType: string) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      
-      switch (fileType) {
-        case "original":
-          setOriginalFile(file);
-          break;
-        case "preview":
-          setPreviewFile(file);
-          break;
-        case "thumbnail":
-          setThumbnailFile(file);
-          break;
+      if (fileType === "original") {
+        setOriginalFile(file);
+        // Auto-populate size
+        setFormData(prev => ({
+          ...prev,
+          size: file.size,
+        }));
+        // Auto-populate resolution
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const img = new window.Image();
+          img.onload = () => {
+            setFormData(prev => ({
+              ...prev,
+              resolution: `${img.width}x${img.height}`,
+            }));
+          };
+          if (typeof ev.target?.result === 'string') {
+            img.src = ev.target.result;
+          }
+        };
+        reader.readAsDataURL(file);
+
+        // --- Auto-generate thumbnail using optimization API ---
+        setThumbnailLoading(true);
+        try {
+          const formData = new FormData();
+          formData.append('file', file);
+          const apiUrl = 'https://image-optimization-sooty.vercel.app/convert?quality=80';
+          const response = await fetch(apiUrl, {
+            method: 'POST',
+            body: formData,
+          });
+          if (!response.ok) throw new Error('Failed to optimize image');
+          const blob = await response.blob();
+          const thumbFile = new File([blob], 'thumbnail.webp', { type: blob.type });
+          setThumbnailFile(thumbFile);
+        } catch (err) {
+          toast({
+            title: 'Thumbnail generation failed',
+            description: 'Could not auto-generate thumbnail. Please select manually.',
+            variant: 'destructive',
+          });
+        } finally {
+          setThumbnailLoading(false);
+        }
+        // --- End thumbnail generation ---
+      } else if (fileType === "thumbnail") {
+        setThumbnailFile(file);
       }
     }
   };
@@ -64,9 +104,6 @@ const WallpaperUpload = () => {
     switch (fileType) {
       case "original":
         setOriginalFile(null);
-        break;
-      case "preview":
-        setPreviewFile(null);
         break;
       case "thumbnail":
         setThumbnailFile(null);
@@ -133,10 +170,10 @@ const WallpaperUpload = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!originalFile || !previewFile || !thumbnailFile) {
+    if (!originalFile || !thumbnailFile) {
       toast({
         title: "Missing files",
-        description: "Please upload all required image files",
+        description: "Please upload original and thumbnail image files",
         variant: "destructive",
       });
       return;
@@ -153,18 +190,16 @@ const WallpaperUpload = () => {
     
     try {
       setUploading(true);
-      const wallpaperId = uuidv4();
-      
-      // Upload images to Firebase Storage
-      const uploadFile = async (file: File, path: string): Promise<string> => {
-        const fileRef = ref(storage, `wallpapers/${wallpaperId}/${path}`);
+      // Use timestamp for unique ID and path
+      const timestamp = Date.now().toString();
+      // Upload images to Firebase Storage with required path
+      const uploadFile = async (file: File, type: "original" | "thumbnail"): Promise<string> => {
+        const fileRef = ref(storage, `wallpapers/${type}/${timestamp}`);
         await uploadBytes(fileRef, file);
         return getDownloadURL(fileRef);
       };
-      
-      const [imageUrl, previewUrl, thumbnailUrl] = await Promise.all([
+      const [imageUrl, thumbnailUrl] = await Promise.all([
         uploadFile(originalFile, "original"),
-        uploadFile(previewFile, "preview"),
         uploadFile(thumbnailFile, "thumbnail"),
       ]);
       
@@ -185,12 +220,10 @@ const WallpaperUpload = () => {
       
       // Create wallpaper document
       const wallpaperData = {
-        id: wallpaperId,
+        id: timestamp,
         name: formData.name,
-        imageUrl,
-        previewUrl,
-        thumbnailUrl,
-        blurHash: "", // Would be generated by a cloud function
+        image: imageUrl,
+        thumbnail: thumbnailUrl,
         downloads: 0,
         likes: 0,
         views: 0,
@@ -199,22 +232,19 @@ const WallpaperUpload = () => {
         aspectRatio,
         orientation,
         category: formData.category,
-        collections: formData.collections,
         tags: formData.tags,
         colors: formData.colors,
         author: formData.author,
-        authorImage: "", // Would be filled by user profile
-        uploadedBy: currentUser?.uid || "",
+        authorImage: currentUser?.photoURL || "",
         description: formData.description,
         isPremium: formData.isPremium,
         isAIgenerated: formData.isAIgenerated,
-        status: "pending" as const,
-        createdAt: Timestamp.now(),
+        status: formData.status,
+        createdAt: new Date().toISOString(),
         license: formData.license,
-        hash: wallpaperId, // A proper hash would be generated
+        hash: timestamp,
       };
-      
-      await setDoc(doc(db, "wallpapers", wallpaperId), wallpaperData);
+      await setDoc(doc(db, "wallpapers", timestamp), wallpaperData);
       
       toast({
         title: "Upload successful!",
@@ -227,6 +257,7 @@ const WallpaperUpload = () => {
         description: "",
         author: "",
         resolution: "",
+        size: 0,
         license: "Standard",
         category: "",
         tags: [],
@@ -234,10 +265,10 @@ const WallpaperUpload = () => {
         collections: [],
         isPremium: false,
         isAIgenerated: false,
+        status: "pending",
       });
       
       setOriginalFile(null);
-      setPreviewFile(null);
       setThumbnailFile(null);
     } catch (error) {
       console.error("Error uploading wallpaper:", error);
@@ -313,65 +344,23 @@ const WallpaperUpload = () => {
               )}
             </div>
             
-            {/* Preview Image */}
-            <div className="space-y-2">
-              <Label htmlFor="preview">Preview Image*</Label>
-              {!previewFile ? (
-                <div className="flex items-center justify-center rounded-md border border-dashed p-6">
-                  <div className="text-center">
-                    <Upload className="mx-auto h-8 w-8 text-muted-foreground" />
-                    <label
-                      htmlFor="preview"
-                      className="mt-2 block cursor-pointer text-sm font-medium text-primary hover:underline"
-                    >
-                      Choose file
-                      <Input
-                        id="preview"
-                        type="file"
-                        className="hidden"
-                        accept="image/*"
-                        onChange={(e) => handleFileChange(e, "preview")}
-                        required
-                      />
-                    </label>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      Medium resolution for previews
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                <div className="relative rounded-md border">
-                  <img
-                    src={URL.createObjectURL(previewFile)}
-                    alt="Preview"
-                    className="mx-auto max-h-[200px] rounded-md object-contain p-1"
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => removeFile("preview")}
-                    className="absolute right-1 top-1 h-6 w-6 rounded-full bg-background/80 p-0"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                  <p className="p-2 text-xs text-muted-foreground">
-                    {previewFile.name} ({Math.round(previewFile.size / 1024)} KB)
-                  </p>
-                </div>
-              )}
-            </div>
-            
             {/* Thumbnail Image */}
             <div className="space-y-2">
               <Label htmlFor="thumbnail">Thumbnail Image*</Label>
-              {!thumbnailFile ? (
+              {thumbnailLoading ? (
+                <div className="flex items-center justify-center rounded-md border border-dashed p-6 min-h-[120px]">
+                  <div className="flex flex-col items-center justify-center w-full">
+                    <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary mb-2" />
+                    <span className="text-xs text-muted-foreground">Generating thumbnail...</span>
+                  </div>
+                </div>
+              ) : !thumbnailFile ? (
                 <div className="flex items-center justify-center rounded-md border border-dashed p-6">
                   <div className="text-center">
                     <Upload className="mx-auto h-8 w-8 text-muted-foreground" />
                     <label
                       htmlFor="thumbnail"
-                      className="mt-2 block cursor-pointer text-sm font-medium text-primary hover:underline"
+                      className={`mt-2 block text-sm font-medium text-primary ${thumbnailLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:underline'}`}
                     >
                       Choose file
                       <Input
@@ -381,6 +370,7 @@ const WallpaperUpload = () => {
                         accept="image/*"
                         onChange={(e) => handleFileChange(e, "thumbnail")}
                         required
+                        disabled={thumbnailLoading}
                       />
                     </label>
                     <p className="mt-1 text-xs text-muted-foreground">
@@ -442,7 +432,7 @@ const WallpaperUpload = () => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="resolution">Resolution* (e.g. 1920x1080)</Label>
+                <Label htmlFor="resolution">Resolution* (auto-filled)</Label>
                 <Input
                   id="resolution"
                   name="resolution"
@@ -450,6 +440,17 @@ const WallpaperUpload = () => {
                   value={formData.resolution}
                   onChange={handleInputChange}
                   required
+                  readOnly
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="size">Size (bytes, auto-filled)</Label>
+                <Input
+                  id="size"
+                  name="size"
+                  placeholder="File size in bytes"
+                  value={formData.size ? formData.size : ''}
+                  readOnly
                 />
               </div>
               
@@ -463,6 +464,22 @@ const WallpaperUpload = () => {
                   onChange={handleInputChange}
                   required
                 />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="status">Status</Label>
+                <select
+                  id="status"
+                  name="status"
+                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                  value={formData.status}
+                  onChange={handleInputChange}
+                  required
+                >
+                  <option value="pending">Pending (default)</option>
+                  <option value="approved">Approved</option>
+                  <option value="hidden">Hidden</option>
+                  <option value="rejected">Rejected</option>
+                </select>
               </div>
               
               <div className="space-y-2">

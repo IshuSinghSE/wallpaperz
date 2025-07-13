@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { doc, getDoc, updateDoc, deleteDoc } from "firebase/firestore";
@@ -30,7 +29,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Edit, Trash2, ArrowUp, ArrowDown, Check, X, Download, Replace } from '@/lib/icons';
+import { Edit, Trash2, ArrowUp, ArrowDown, Check, X, Download } from '@/lib/icons';
 import { format } from "date-fns";
 import { 
   Form,
@@ -66,16 +65,31 @@ const WallpaperDetails = () => {
         const docSnap = await getDoc(docRef);
         
         if (docSnap.exists()) {
-          const data = { id: docSnap.id, ...docSnap.data() } as Wallpaper;
-          
-          // Handle legacy field names if needed
-          if (!data.image && (data as any).imageUrl) {
-            data.image = (data as any).imageUrl;
-          }
-          if (!data.preview && (data as any).previewUrl) {
-            data.preview = (data as any).previewUrl;
-          }
-          
+          const raw = docSnap.data();
+          // Map Firestore fields to Wallpaper model
+          const data: Wallpaper = {
+            id: docSnap.id,
+            name: raw.name || "",
+            image: raw.image || raw.imageUrl || "",
+            thumbnail: raw.thumbnail || raw.thumbnailUrl || "",
+            downloads: raw.downloads || 0,
+            likes: raw.likes || 0,
+            size: raw.size || 0,
+            resolution: raw.resolution || "",
+            orientation: raw.orientation || "",
+            category: raw.category || "",
+            tags: Array.isArray(raw.tags) ? raw.tags : [],
+            colors: Array.isArray(raw.colors) ? raw.colors : [],
+            author: raw.author || "",
+            authorImage: raw.authorImage || "",
+            description: raw.description || "",
+            isPremium: !!raw.isPremium,
+            isAIgenerated: !!raw.isAIgenerated,
+            status: raw.status || "pending",
+            createdAt: typeof raw.createdAt === "string" ? raw.createdAt : new Date().toISOString(),
+            license: raw.license || "",
+            hash: raw.hash || docSnap.id
+          };
           setWallpaper(data);
         } else {
           toast({
@@ -104,7 +118,6 @@ const WallpaperDetails = () => {
   const formSchema = z.object({
     name: z.string().min(2, "Name must be at least 2 characters"),
     image: z.string().url("Must be a valid URL"),
-    preview: z.string().url("Must be a valid URL"),
     thumbnail: z.string().url("Must be a valid URL"),
     description: z.string().optional(),
     author: z.string().min(1, "Author is required"),
@@ -114,7 +127,6 @@ const WallpaperDetails = () => {
     colors: z.array(z.string()),
     resolution: z.string().min(1, "Resolution is required"),
     size: z.number().positive("Size must be positive"),
-    aspectRatio: z.number().positive("Aspect ratio must be positive"),
     orientation: z.string().min(1, "Orientation is required"),
     license: z.string().optional(),
     isPremium: z.boolean(),
@@ -129,7 +141,6 @@ const WallpaperDetails = () => {
     defaultValues: {
       name: wallpaper?.name || "",
       image: wallpaper?.image || "",
-      preview: wallpaper?.preview || "",
       thumbnail: wallpaper?.thumbnail || "",
       description: wallpaper?.description || "",
       author: wallpaper?.author || "",
@@ -139,7 +150,6 @@ const WallpaperDetails = () => {
       colors: wallpaper?.colors || [],
       resolution: wallpaper?.resolution || "",
       size: wallpaper?.size || 0,
-      aspectRatio: wallpaper?.aspectRatio || 0,
       orientation: wallpaper?.orientation || "",
       license: wallpaper?.license || "",
       isPremium: wallpaper?.isPremium || false,
@@ -155,7 +165,6 @@ const WallpaperDetails = () => {
       form.reset({
         name: wallpaper.name,
         image: wallpaper.image,
-        preview: wallpaper.preview,
         thumbnail: wallpaper.thumbnail,
         description: wallpaper.description,
         author: wallpaper.author,
@@ -165,7 +174,6 @@ const WallpaperDetails = () => {
         colors: wallpaper.colors,
         resolution: wallpaper.resolution,
         size: wallpaper.size,
-        aspectRatio: wallpaper.aspectRatio,
         orientation: wallpaper.orientation,
         license: wallpaper.license,
         isPremium: wallpaper.isPremium,
@@ -261,9 +269,7 @@ const WallpaperDetails = () => {
     if (!wallpaper) return;
     
     let downloadUrl = wallpaper.image;
-    if (currentTab === "preview") {
-      downloadUrl = wallpaper.preview;
-    } else if (currentTab === "thumbnail") {
+    if (currentTab === "thumbnail") {
       downloadUrl = wallpaper.thumbnail;
     }
     
@@ -342,9 +348,7 @@ const WallpaperDetails = () => {
 
   const currentImage = currentTab === "thumbnail" 
     ? wallpaper.thumbnail 
-    : currentTab === "preview" 
-      ? wallpaper.preview 
-      : wallpaper.image;
+    : wallpaper.image;
 
   return (
     <div className="animate-fade-in space-y-6">
@@ -353,11 +357,15 @@ const WallpaperDetails = () => {
           <h1 className="text-2xl font-bold">{wallpaper.name}</h1>
           <p className="text-muted-foreground">
             By {wallpaper.author} • Added{" "}
-            {wallpaper.createdAt instanceof Date
-              ? format(wallpaper.createdAt, "MMM d, yyyy")
-              : wallpaper.createdAt?.toDate
-              ? format(wallpaper.createdAt.toDate(), "MMM d, yyyy")
-              : "Unknown date"}
+            {(() => {
+              if (typeof wallpaper.createdAt === "string") {
+                const date = new Date(wallpaper.createdAt);
+                if (!isNaN(date.getTime())) {
+                  return format(date, "MMM d, yyyy");
+                }
+              }
+              return "Unknown date";
+            })()}
           </p>
         </div>
         
@@ -416,20 +424,6 @@ const WallpaperDetails = () => {
                           <FormLabel>Original Image URL</FormLabel>
                           <FormControl>
                             <Input placeholder="https://example.com/image.jpg" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="preview"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Preview Image URL</FormLabel>
-                          <FormControl>
-                            <Input placeholder="https://example.com/preview.jpg" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -519,26 +513,6 @@ const WallpaperDetails = () => {
                             <Input 
                               type="number" 
                               placeholder="File size in bytes"
-                              {...field}
-                              onChange={e => field.onChange(Number(e.target.value))}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="aspectRatio"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Aspect Ratio</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="number"
-                              step="0.01"
-                              placeholder="1.77"
                               {...field}
                               onChange={e => field.onChange(Number(e.target.value))}
                             />
@@ -804,12 +778,6 @@ const WallpaperDetails = () => {
                       Thumbnail
                     </TabsTrigger>
                     <TabsTrigger
-                      value="preview"
-                      className="rounded-none border-b-2 border-transparent px-4 py-3 data-[state=active]:border-primary"
-                    >
-                      Preview
-                    </TabsTrigger>
-                    <TabsTrigger
                       value="original"
                       className="rounded-none border-b-2 border-transparent px-4 py-3 data-[state=active]:border-primary"
                     >
@@ -824,16 +792,6 @@ const WallpaperDetails = () => {
                         alt={wallpaper.name}
                         className="h-full w-full object-contain"
                       />
-                    </TabsContent>
-                    
-                    <TabsContent value="preview" className="m-0 h-full">
-                      {currentTab === "preview" && (
-                        <img
-                          src={wallpaper.preview}
-                          alt={wallpaper.name}
-                          className="h-full w-full object-contain"
-                        />
-                      )}
                     </TabsContent>
                     
                     <TabsContent value="original" className="m-0 h-full">
@@ -883,7 +841,7 @@ const WallpaperDetails = () => {
             </CardHeader>
             
             <CardContent className="space-y-4">
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <p className="text-sm font-medium text-muted-foreground">Status</p>
                 <Select
                   disabled={updatingStatus}
@@ -913,8 +871,8 @@ const WallpaperDetails = () => {
               </div>
               
               <div className="space-y-1">
-                <p className="text-sm font-medium text-muted-foreground">Aspect Ratio</p>
-                <p>{wallpaper.aspectRatio.toFixed(2)}</p>
+                <p className="text-sm font-medium text-muted-foreground">Orientation</p>
+                <p>{wallpaper.orientation}</p>
               </div>
               
               <div className="space-y-1">
@@ -940,7 +898,6 @@ const WallpaperDetails = () => {
               <div className="space-y-1">
                 <p className="text-sm font-medium text-muted-foreground">Stats</p>
                 <div className="flex gap-4">
-                  <p><span className="font-medium">{wallpaper.views}</span> views</p>
                   <p><span className="font-medium">{wallpaper.downloads}</span> downloads</p>
                   <p><span className="font-medium">{wallpaper.likes}</span> likes</p>
                 </div>

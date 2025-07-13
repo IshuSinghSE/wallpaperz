@@ -63,10 +63,11 @@ const Users = () => {
   const [lastVisible, setLastVisible] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
   const [hasMore, setHasMore] = useState(true);
   const [filterRole, setFilterRole] = useState<"all" | "admin" | "user">("all");
+  const [filterAdmin, setFilterAdmin] = useState<"all" | "admin" | "user">("all");
 
   useEffect(() => {
     fetchUsers(true);
-  }, [filterRole]);
+  }, [filterAdmin]);
 
   const fetchUsers = async (isInitial: boolean = false) => {
     try {
@@ -77,21 +78,16 @@ const Users = () => {
       }
       
       let queryConstraints = [];
-      
-      if (filterRole !== "all") {
-        queryConstraints.push(orderBy("role"));
-        queryConstraints.push(where("role", "==", filterRole));
-      } else {
-        queryConstraints.push(orderBy("role"));
+      queryConstraints.push(orderBy("createdAt"));
+      if (filterAdmin === "admin") {
+        queryConstraints.push(where("isAdmin", "==", true));
+      } else if (filterAdmin === "user") {
+        queryConstraints.push(where("isAdmin", "==", false));
       }
-      
-      queryConstraints.push(orderBy("displayName"));
       queryConstraints.push(limit(ITEMS_PER_PAGE));
-      
       if (!isInitial && lastVisible) {
         queryConstraints.push(startAfter(lastVisible));
       }
-      
       const q = query(collection(db, "users"), ...queryConstraints);
       const querySnapshot = await getDocs(q);
       
@@ -178,7 +174,7 @@ const Users = () => {
 
   const openEditDialog = (user: User) => {
     setCurrentUserDetails(user);
-    setSelectedRole(user.role);
+    setSelectedRole(selectedRole); // keep previous or default to 'user'
     setIsEditDialogOpen(true);
   };
 
@@ -288,20 +284,20 @@ const Users = () => {
         <div className="flex gap-2">
           <div className="relative group">
             <Select
-              value={filterRole}
-              onValueChange={(value: "all" | "admin" | "user") => setFilterRole(value)}
+              value={filterAdmin}
+              onValueChange={(value: "all" | "admin" | "user") => setFilterAdmin(value)}
             >
               <SelectTrigger className="w-[150px] backdrop-blur-sm bg-white/10 border border-white/20 shadow-lg">
-                <SelectValue placeholder="Filter by role" />
+                <SelectValue placeholder="Filter by admin" />
               </SelectTrigger>
               <SelectContent className="backdrop-blur-md bg-white/70 dark:bg-slate-900/70 border border-white/20">
-                <SelectItem value="all">All Roles</SelectItem>
-                <SelectItem value="admin">Admin</SelectItem>
-                <SelectItem value="user">User</SelectItem>
+                <SelectItem value="all">All Users</SelectItem>
+                <SelectItem value="admin">Admins</SelectItem>
+                <SelectItem value="user">Users</SelectItem>
               </SelectContent>
             </Select>
             <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-              <Badge className="bg-primary/80 text-xs">Role</Badge>
+              <Badge className="bg-primary/80 text-xs">Admin</Badge>
             </div>
           </div>
         </div>
@@ -327,7 +323,9 @@ const Users = () => {
                   <TableRow>
                     <TableHead>User</TableHead>
                     <TableHead>Email</TableHead>
-                    <TableHead>Role</TableHead>
+                    <TableHead>Premium</TableHead>
+                    <TableHead>Auth</TableHead>
+                    <TableHead>Created</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -345,38 +343,54 @@ const Users = () => {
                           <div className="flex items-center gap-3">
                             <Avatar className="border border-white/20 shadow-md">
                               {user.photoURL ? (
-                                <AvatarImage src={user.photoURL} alt={user.displayName} />
+                                <AvatarImage src={user.photoURL} alt={user.name} />
                               ) : null}
                               <AvatarFallback className="bg-primary/20 text-primary-foreground">
-                                {getInitials(user.displayName || "User")}
+                                {getInitials(user.name || "User")}
                               </AvatarFallback>
                             </Avatar>
                             <div>
-                              <p className="font-medium">{user.displayName}</p>
+                              <p className="font-medium flex items-center gap-2">{user.name}
+                                {user.isAdmin && (
+                                  <Badge className="ml-2 bg-gradient-to-r from-purple-500 to-indigo-500 text-white">Admin</Badge>
+                                )}
+                              </p>
                               {currentUser?.uid === user.uid && (
                                 <span className="text-xs text-muted-foreground">
                                   (You)
                                 </span>
-                              )}
-                              {user.isPremium && (
-                                <Badge className="ml-2 bg-gradient-to-r from-amber-500 to-yellow-300 text-white">Premium</Badge>
                               )}
                             </div>
                           </div>
                         </TableCell>
                         <TableCell>{user.email}</TableCell>
                         <TableCell>
-                          <div className="flex items-center">
-                            <span
-                              className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${
-                                user.role === "admin"
-                                  ? "bg-purple-50 text-purple-700 border-purple-200"
-                                  : "bg-slate-50 text-slate-700 border-slate-200"
-                              } shadow-sm`}
-                            >
-                              {user.role}
-                            </span>
-                          </div>
+                          {user.isPremium ? (
+                            <Badge className="bg-gradient-to-r from-amber-500 to-yellow-300 text-white">Premium</Badge>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">Free</span>
+                          )}
+                        </TableCell>
+                        <TableCell>{user.authProvider}</TableCell>
+                        <TableCell>
+                          {user.createdAt
+                            ? (
+                                (user.createdAt instanceof Date
+                                  ? user.createdAt
+                                  : typeof user.createdAt === "object" && "toDate" in user.createdAt
+                                    ? user.createdAt.toDate()
+                                    : null
+                                )
+                                ? (
+                                    ((user.createdAt instanceof Date
+                                      ? user.createdAt
+                                      : user.createdAt.toDate()
+                                    ) as Date).toISOString().split("T")[0]
+                                  )
+                                : "-"
+                              )
+                            : "-"
+                          }
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
@@ -388,7 +402,7 @@ const Users = () => {
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
-                            {currentUser?.uid !== user.uid && (
+                            {currentUser?.uid !== user.uid ? (
                               <Button
                                 size="icon"
                                 variant="ghost"
@@ -397,7 +411,14 @@ const Users = () => {
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
-                            )}
+                            ):  <Button
+                                size="icon"
+                                variant="ghost"
+                                disabled
+                                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>}
                           </div>
                         </TableCell>
                       </TableRow>
@@ -427,7 +448,7 @@ const Users = () => {
           <DialogHeader>
             <DialogTitle>Change User Role</DialogTitle>
             <DialogDescription>
-              Update permissions for {currentUserDetails?.displayName}.
+              Update permissions for {currentUserDetails?.name}.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -461,7 +482,7 @@ const Users = () => {
           <DialogHeader>
             <DialogTitle>Delete User</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete {currentUserDetails?.displayName}? This action cannot be undone.
+              Are you sure you want to delete {currentUserDetails?.name}? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

@@ -210,7 +210,7 @@ const WallpaperList = () => {
                 >
                   <div className="aspect-[3/4] relative">
                     <img
-                      src={wallpaper.thumbnailUrl || wallpaper.thumbnail}
+                      src={wallpaper.thumbnail}
                       alt={wallpaper.name}
                       className="h-full w-full object-cover"
                       loading="lazy"

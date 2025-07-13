@@ -1,4 +1,3 @@
-
 import { Timestamp } from "firebase/firestore";
 
 export type WallpaperStatus = "pending" | "approved" | "rejected" | "hidden";
@@ -7,11 +6,10 @@ export type AuthProvider = "google" | "apple" | "email";
 export interface Wallpaper {
   id: string;
   name: string;
-  imageUrl: string;
-  thumbnailUrl: string;
+  image: string;
+  thumbnail: string;
   downloads: number;
   likes: number;
-  views?: number;
   size: number;
   resolution: string;
   orientation: string;
@@ -24,23 +22,14 @@ export interface Wallpaper {
   isPremium: boolean;
   isAIgenerated: boolean;
   status: WallpaperStatus;
-  createdAt: Timestamp;
+  createdAt: string;
   license: string;
   hash: string;
-  aspectRatio: number;
-  // We'll define these as regular properties instead of getters for compatibility
-  image?: string;
-  preview?: string;
-  thumbnail?: string;
 }
 
 export interface Category {
   id: string;
-  name: string;
-  description?: string;
-  iconUrl: string;
-  wallpaperCount: number;
-  createdAt: Timestamp;
+  createdAt: string;
 }
 
 export interface Collection {
@@ -52,20 +41,19 @@ export interface Collection {
   createdBy: string;
   tags?: string[];
   type?: "manual" | "auto";
-  createdAt: Timestamp;
+  createdAt: string;
 }
 
 export interface User {
   uid: string;
-  name?: string;
+  name: string;
   email: string;
-  displayName: string;
   photoURL: string;
-  role: "admin" | "user";
-  savedWallpapers?: string[];
-  uploadedWallpapers?: string[];
-  isPremium?: boolean;
-  premiumPurchasedAt?: Timestamp;
-  authProvider?: AuthProvider;
-  createdAt?: Timestamp;
+  isAdmin: boolean;
+  isPremium: boolean;
+  authProvider: string;
+  createdAt: Date | Timestamp;
+  premiumPurchasedAt?: Date | Timestamp | null;
+  savedWallpapers: string[];
+  uploadedWallpapers: string[];
 }

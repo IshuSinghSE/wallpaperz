@@ -15,6 +15,9 @@ export interface CollectionFormData {
   coverImage: string;
   tags: string[];
   type: "manual" | "auto";
+  wallpaperIds: string[];
+  createdAt: string;
+  createdBy: string;
 }
 
 interface CollectionFormProps {
@@ -54,6 +57,16 @@ const CollectionForm = ({ initialData, onFormChange }: CollectionFormProps) => {
           value={formData.name}
           onChange={(e) => handleInputChange('name', e.target.value)}
           placeholder="Collection name"
+          className="backdrop-blur-sm bg-white/10 border border-white/20"
+        />
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="wallpaperIds">Wallpaper IDs (comma separated)</Label>
+        <Input
+          id="wallpaperIds"
+          value={formData.wallpaperIds.join(", ")}
+          onChange={(e) => handleInputChange('wallpaperIds', e.target.value.split(",").map(id => id.trim()).filter(Boolean))}
+          placeholder="id1, id2, id3"
           className="backdrop-blur-sm bg-white/10 border border-white/20"
         />
       </div>

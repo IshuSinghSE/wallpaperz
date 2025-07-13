@@ -121,12 +121,11 @@ export const useWallpapers = ({
         
         const wallpaperData = querySnapshot.docs.map(doc => {
           const data = doc.data();
-          // Map Firestore field names to our schema field names if needed
           return {
             id: doc.id,
             name: data.name,
-            imageUrl: data.image || data.imageUrl,
-            thumbnailUrl: data.thumbnail || data.thumbnailUrl,
+            image: data.image,                 // Use 'image'
+            thumbnail: data.thumbnail,         // Use 'thumbnail'
             downloads: data.downloads || 0,
             likes: data.likes || 0,
             size: data.size || 0,
@@ -136,12 +135,12 @@ export const useWallpapers = ({
             tags: data.tags || [],
             colors: data.colors || [],
             author: data.author || "",
-            authorImage: data.authorImage || "",
+            authorImage: data.authorImage || "", // Add this field
             description: data.description || "",
             isPremium: data.isPremium || false,
             isAIgenerated: data.isAIgenerated || false,
             status: data.status || "pending",
-            createdAt: data.createdAt ? data.createdAt.toDate().toISOString() : new Date().toISOString(),
+            createdAt: typeof data.createdAt === "string" ? data.createdAt : new Date().toISOString(),
             license: data.license || "",
             hash: data.hash || doc.id
           } as Wallpaper;
@@ -197,12 +196,11 @@ export const useWallpapers = ({
         
         const newWallpapers = querySnapshot.docs.map(doc => {
           const data = doc.data();
-          // Map Firestore field names to our schema field names if needed
           return {
             id: doc.id,
             name: data.name,
-            imageUrl: data.image || data.imageUrl,
-            thumbnailUrl: data.thumbnail || data.thumbnailUrl,
+            image: data.image,                 // Use 'image'
+            thumbnail: data.thumbnail,         // Use 'thumbnail'
             downloads: data.downloads || 0,
             likes: data.likes || 0,
             size: data.size || 0,
@@ -212,12 +210,12 @@ export const useWallpapers = ({
             tags: data.tags || [],
             colors: data.colors || [],
             author: data.author || "",
-            authorImage: data.authorImage || "",
+            authorImage: data.authorImage || "", // Add this field
             description: data.description || "",
             isPremium: data.isPremium || false,
             isAIgenerated: data.isAIgenerated || false,
             status: data.status || "pending",
-            createdAt: data.createdAt ? data.createdAt.toDate().toISOString() : new Date().toISOString(),
+            createdAt: typeof data.createdAt === "string" ? data.createdAt : new Date().toISOString(),
             license: data.license || "",
             hash: data.hash || doc.id
           } as Wallpaper;

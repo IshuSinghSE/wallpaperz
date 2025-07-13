@@ -108,7 +108,7 @@ export const useCollections = () => {
       };
 
       const docRef = await addDoc(collection(db, "collections"), newCollection);
-      return { id: docRef.id, ...newCollection } as Collection;
+      return { id: docRef.id, ...newCollection } as unknown as Collection;
     },
     onSuccess: () => {
       toast({

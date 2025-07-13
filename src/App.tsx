@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -31,6 +30,7 @@ const Collections = lazy(() => import("@/pages/dashboard/Collections"));
 const Users = lazy(() => import("@/pages/dashboard/Users"));
 const Settings = lazy(() => import("@/pages/dashboard/Settings"));
 const UserProfile = lazy(() => import("@/pages/dashboard/UserProfile"));
+const CollectionDetail = lazy(() => import("@/pages/dashboard/CollectionDetail"));
 
 // Loading component
 const PageLoader = () => (
@@ -74,6 +74,7 @@ const App = () => (
                     <Route path="/dashboard/settings" element={<Settings />} />
                     <Route path="/dashboard/profile" element={<UserProfile />} />
                     <Route path="/dashboard/users/:id" element={<UserProfile />} />
+                    <Route path="/dashboard/collections/:id" element={<CollectionDetail />} />
                   </Route>
                 </Route>
               </Route>

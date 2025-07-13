@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { 
   User as FirebaseUser,
@@ -39,33 +38,32 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
-      
       if (user) {
         try {
           // Special case for the specified email
           if (user.email === "ishu.111636@gmail.com") {
-            console.log("Admin email detected, setting admin role");
             setUserRole("admin");
           } else {
             const userDoc = await getDoc(doc(db, "users", user.uid));
             if (userDoc.exists()) {
-              const userData = userDoc.data() as Partial<User>;
-              setUserRole(userData.role || null);
+              const userData = userDoc.data();
+              if (userData.isAdmin === true || user.email === "ishu.111636@gmail.com") {
+                setUserRole("admin");
+              } else {
+                setUserRole("user");
+              }
             } else {
-              setUserRole(null);
+              setUserRole("user");
             }
           }
         } catch (error) {
-          console.error("Error fetching user role:", error);
-          setUserRole(null);
+          setUserRole("user");
         }
       } else {
-        setUserRole(null);
+        setUserRole("user");
       }
-      
       setIsLoading(false);
     });
-
     return unsubscribe;
   }, []);
 
