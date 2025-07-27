@@ -35,6 +35,7 @@ import { Edit, Trash2, Plus, Search, Loader2, X } from '@/lib/icons';
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useRef, useCallback as reactUseCallback } from "react";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -55,11 +56,8 @@ const Categories = () => {
     iconUrl: "",
   });
 
-  useEffect(() => {
-    fetchCategories(true);
-  }, []);
-
-  const fetchCategories = async (isInitial: boolean = false) => {
+  const fetchCategories = useCallback(
+    async (isInitial: boolean = false) => {
     try {
       setLoading(true);
       
@@ -129,7 +127,11 @@ const Categories = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [lastVisible, toast]);
+
+  useEffect(() => {
+    fetchCategories(true);
+  }, [fetchCategories]);
 
   const handleAddCategory = async () => {
     try {
@@ -561,3 +563,12 @@ const Categories = () => {
 };
 
 export default Categories;
+/**
+ * useCallback is a wrapper around React's useCallback to ensure correct typing and usage.
+ * In this file, it's used to memoize fetchCategories with its dependencies.
+ */
+function useCallback<T extends (...args: unknown[]) => unknown>(callback: T, deps: React.DependencyList): T {
+  // Use React's useCallback to memoize the function
+  return reactUseCallback(callback, deps);
+}
+

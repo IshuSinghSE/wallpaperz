@@ -20,8 +20,8 @@ const Dashboard = () => {
     return (
       <div className="animate-fade-in space-y-6">
         <div>
-          <h1 className="text-2xl font-bold">Dashboard</h1>
-          <p className="text-muted-foreground">Welcome to the wallpaper admin panel</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+          <p className="text-gray-700 dark:text-gray-300">Welcome to the wallpaper admin panel</p>
         </div>
         <DashboardSkeleton />
       </div>
@@ -31,9 +31,9 @@ const Dashboard = () => {
   return (
     <div className="animate-fade-in space-y-6">
       <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold">Dashboard</h1>
-          <p className="text-muted-foreground">Welcome to the wallpaper admin panel</p>
+       <div>
+          <h1 className="text-2xl font-bold text-black/80 dark:text-white">Dashboard</h1>
+          <p className="dark:text-muted-foreground text-gray-700">Welcome to the wallpaper admin panel</p>
         </div>
         <RefreshButton 
           isLoading={isFetching}
@@ -44,14 +44,14 @@ const Dashboard = () => {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="backdrop-blur-sm bg-white/10 dark:bg-slate-900/20 border border-white/20 dark:border-slate-800/50 shadow-xl">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Total Wallpapers</CardTitle>
-            <ImageIcon className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-gray-900 dark:text-white">Total Wallpapers</CardTitle>
+            <ImageIcon className="h-6 w-6 text-gray-700 dark:text-gray-300" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-2xl font-bold text-primary">
               {dashboardData?.totalCount || 0}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-gray-700 dark:text-gray-300">
               All wallpapers in the database
             </p>
           </CardContent>
@@ -60,12 +60,12 @@ const Dashboard = () => {
         <Link to="/dashboard/pending">
           <Card className="hover:bg-muted/10 transition-colors cursor-pointer h-full backdrop-blur-sm bg-white/10 dark:bg-slate-900/20 border border-white/20 dark:border-slate-800/50 shadow-xl">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Pending Approval</CardTitle>
-              <Clock className="h-4 w-4 text-amber-500" />
+              <CardTitle className="text-sm font-medium text-gray-900 dark:text-white">Pending Approval</CardTitle>
+              <Clock className="h-6 w-6 text-amber-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{dashboardData?.pendingCount || 0}</div>
-              <p className="text-xs text-muted-foreground">
+              <div className="text-2xl font-bold text-amber-500">{dashboardData?.pendingCount || 0}</div>
+              <p className="text-xs text-gray-700 dark:text-gray-300">
                 Awaiting moderation
               </p>
             </CardContent>
@@ -74,12 +74,12 @@ const Dashboard = () => {
 
         <Card className="backdrop-blur-sm bg-white/10 dark:bg-slate-900/20 border border-white/20 dark:border-slate-800/50 shadow-xl">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Approved</CardTitle>
-            <Check className="h-4 w-4 text-emerald-500" />
+            <CardTitle className="text-sm font-medium text-gray-900 dark:text-white">Approved</CardTitle>
+            <Check className="h-6 w-6 text-emerald-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{dashboardData?.approvedCount || 0}</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-2xl font-bold text-emerald-500">{dashboardData?.approvedCount || 0}</div>
+            <p className="text-xs text-gray-700 dark:text-gray-300">
               Live in the app
             </p>
           </CardContent>
@@ -87,12 +87,12 @@ const Dashboard = () => {
 
         <Card className="backdrop-blur-sm bg-white/10 dark:bg-slate-900/20 border border-white/20 dark:border-slate-800/50 shadow-xl">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Rejected</CardTitle>
-            <X className="h-4 w-4 text-rose-500" />
+            <CardTitle className="text-sm font-medium text-gray-900 dark:text-white">Rejected</CardTitle>
+            <X className="h-6 w-6 text-rose-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{dashboardData?.rejectedCount || 0}</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-2xl font-bold text-rose-500">{dashboardData?.rejectedCount || 0}</div>
+            <p className="text-xs text-gray-700 dark:text-gray-300">
               Not approved for use
             </p>
           </CardContent>
@@ -101,7 +101,7 @@ const Dashboard = () => {
 
       <Card className="backdrop-blur-sm bg-white/10 dark:bg-slate-900/20 border border-white/20 dark:border-slate-800/50 shadow-xl">
         <CardHeader className="flex justify-between items-center">
-          <CardTitle>Recent Wallpapers</CardTitle>
+          <CardTitle className="text-gray-900 dark:text-white">Recent Wallpapers</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -111,12 +111,12 @@ const Dashboard = () => {
                   <table className="w-full">
                     <thead>
                       <tr className="border-b border-white/20 dark:border-slate-800/50">
-                        <th>Thumbnail</th>
-                        <th>Name</th>
-                        <th>Status</th>
-                        <th className="hidden sm:table-cell">Author</th>
-                        <th className="hidden md:table-cell">Date Added</th>
-                        <th>Action</th>
+                        <th className="text-left text-xs text-black dark:text-gray-200">Thumbnail</th>
+                        <th className="text-left text-xs dark:text-gray-200">Name</th>
+                        <th className="text-left text-xs dark:text-gray-200">Status</th>
+                        <th className="hidden sm:table-cell text-left text-xs dark:text-gray-200">Author</th>
+                        <th className="hidden md:table-cell text-left text-xs dark:text-gray-200">Date Added</th>
+                        <th className="text-left text-xs dark:text-gray-200">Action</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -132,7 +132,7 @@ const Dashboard = () => {
                             </Link>
                           </td>
                           <td>
-                            <Link to={`/dashboard/wallpapers/${wallpaper.id}`} className="hover:underline">
+                            <Link to={`/dashboard/wallpapers/${wallpaper.id}`} className="hover:underline text-gray-900 dark:text-white">
                               {wallpaper.name}
                             </Link>
                           </td>
@@ -151,14 +151,14 @@ const Dashboard = () => {
                               {wallpaper.status}
                             </span>
                           </td>
-                          <td className="hidden sm:table-cell">{wallpaper.author}</td>
-                          <td className="hidden md:table-cell">
+                          <td className="hidden sm:table-cell text-gray-700 dark:text-white">{wallpaper.author}</td>
+                          <td className="hidden md:table-cell text-gray-600 dark:text-gray-400">
                             {convertTimestamp(wallpaper.createdAt).toLocaleDateString()}
                           </td>
                           <td>
                             <Link
                               to={`/dashboard/wallpapers/${wallpaper.id}`}
-                              className="text-sm font-medium text-primary hover:underline"
+                              className="text-sm font-medium text-blue-600 dark:text-primary hover:underline"
                             >
                               View
                             </Link>
@@ -170,7 +170,7 @@ const Dashboard = () => {
                 </div>
               </div>
             ) : (
-              <p className="text-center text-muted-foreground">
+              <p className="text-center text-gray-700 dark:text-gray-300">
                 No recent wallpapers found
               </p>
             )}

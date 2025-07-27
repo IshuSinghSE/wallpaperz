@@ -159,8 +159,8 @@ const PendingApproval = () => {
     <div className="animate-fade-in space-y-6">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Pending Approval</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Pending Approval</h1>
+          <p className="text-gray-700 dark:text-gray-300">
             Review and moderate new wallpaper submissions
           </p>
         </div>
@@ -200,10 +200,10 @@ const PendingApproval = () => {
 
       {pendingWallpapers.length === 0 ? (
         <div className="flex h-64 flex-col items-center justify-center rounded-lg border border-dashed">
-          <p className="text-muted-foreground">
+          <p className="text-gray-700 dark:text-gray-300">
             No wallpapers pending approval
           </p>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-gray-700 dark:text-gray-300">
             All wallpapers have been reviewed
           </p>
         </div>
@@ -257,16 +257,16 @@ const PendingApproval = () => {
                 </div>
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-4">
-                  <h3 className="line-clamp-1 text-lg font-semibold text-white">
+                  <h3 className="line-clamp-1 text-lg font-semibold text-gray-900 dark:text-white drop-shadow-md">
                     {wallpaper.name}
                   </h3>
-                  <p className="line-clamp-1 text-sm text-white/80">
+                  <p className="line-clamp-1 text-sm text-gray-800 dark:text-white/80 drop-shadow-md">
                     By {wallpaper.author}
                   </p>
                 </div>
               </div>
               <CardHeader className="p-4 pb-2">
-                <CardTitle className="text-lg">{wallpaper.name}</CardTitle>
+                <CardTitle className="text-lg text-gray-900 dark:text-white">{wallpaper.name}</CardTitle>
               </CardHeader>
 
               <CardContent className="p-4 pt-0">
@@ -274,22 +274,21 @@ const PendingApproval = () => {
                   {wallpaper.tags.slice(0, 2).map((tag, i) => (
                     <span
                       key={i}
-                      className="inline-block rounded-full bg-muted px-2 py-1 text-xs"
+                      className="inline-block rounded-full bg-gray-100 dark:bg-muted px-2 py-1 text-xs text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700"
                     >
                       {tag}
                     </span>
                   ))}
                   {wallpaper.tags.length > 2 && (
-                    <span className="inline-block rounded-full bg-muted px-2 py-1 text-xs">
+                    <span className="inline-block rounded-full bg-gray-100 dark:bg-muted px-2 py-1 text-xs text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700">
                       +{wallpaper.tags.length - 2} more
                     </span>
                   )}
                 </div>
-
                 <div className="mt-2">
-                  <Link
+                  <Link 
                     to={`/dashboard/wallpapers/${wallpaper.id}`}
-                    className="text-sm font-medium text-primary hover:underline"
+                    className="text-sm font-medium text-blue-600 dark:text-primary hover:underline"
                   >
                     View Details
                   </Link>

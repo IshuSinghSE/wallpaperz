@@ -65,8 +65,8 @@ const Settings = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Settings</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Settings</h1>
+        <p className="text-gray-700 dark:text-gray-300">
           Manage application settings and preferences
         </p>
       </div>
@@ -82,8 +82,8 @@ const Settings = () => {
         <TabsContent value="general" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>General Settings</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-gray-900 dark:text-white">General Settings</CardTitle>
+              <CardDescription className="text-gray-700 dark:text-gray-300">
                 Configure basic application settings
               </CardDescription>
             </CardHeader>
@@ -205,8 +205,8 @@ const Settings = () => {
         <TabsContent value="notifications" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Notification Settings</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-gray-900 dark:text-white">Notification Settings</CardTitle>
+              <CardDescription className="text-gray-700 dark:text-gray-300">
                 Configure how and when you receive notifications
               </CardDescription>
             </CardHeader>
@@ -314,8 +314,8 @@ const Settings = () => {
         <TabsContent value="api" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>API Settings</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-gray-900 dark:text-white">API Settings</CardTitle>
+              <CardDescription className="text-gray-700 dark:text-gray-300">
                 Manage API keys and access
               </CardDescription>
             </CardHeader>
@@ -366,7 +366,7 @@ const Settings = () => {
         <TabsContent value="appearance" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Appearance Settings</CardTitle>
+              <CardTitle className="text-gray-900 dark:text-white">Appearance Settings</CardTitle>
               <CardDescription>
                 Customize the appearance of the admin dashboard
               </CardDescription>

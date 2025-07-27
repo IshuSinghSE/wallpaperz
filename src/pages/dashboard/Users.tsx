@@ -65,66 +65,69 @@ const Users = () => {
   const [filterRole, setFilterRole] = useState<"all" | "admin" | "user">("all");
   const [filterAdmin, setFilterAdmin] = useState<"all" | "admin" | "user">("all");
 
+  const fetchUsers = React.useCallback(
+    async (isInitial: boolean = false) => {
+      try {
+        setLoading(true);
+        
+        if (isInitial) {
+          setLastVisible(null);
+        }
+        
+        const queryConstraints = [];
+        queryConstraints.push(orderBy("createdAt"));
+        if (filterAdmin === "admin") {
+          queryConstraints.push(where("isAdmin", "==", true));
+        } else if (filterAdmin === "user") {
+          queryConstraints.push(where("isAdmin", "==", false));
+        }
+        queryConstraints.push(limit(ITEMS_PER_PAGE));
+        if (!isInitial && lastVisible) {
+          queryConstraints.push(startAfter(lastVisible));
+        }
+        const q = query(collection(db, "users"), ...queryConstraints);
+        const querySnapshot = await getDocs(q);
+        
+        if (querySnapshot.empty) {
+          setHasMore(false);
+          setLoading(false);
+          if (isInitial) {
+            setUsers([]);
+          }
+          return;
+        }
+        
+        const lastVisibleDoc = querySnapshot.docs[querySnapshot.docs.length - 1];
+        setLastVisible(lastVisibleDoc);
+        
+        const usersList = querySnapshot.docs.map(
+          (doc) => ({ uid: doc.id, ...doc.data() } as User)
+        );
+        
+        if (isInitial) {
+          setUsers(usersList);
+        } else {
+          setUsers(prev => [...prev, ...usersList]);
+        }
+        
+        setHasMore(querySnapshot.docs.length === ITEMS_PER_PAGE);
+      } catch (error) {
+        console.error("Error fetching users:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load users",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    },
+    [filterAdmin, lastVisible, toast]
+  );
+
   useEffect(() => {
     fetchUsers(true);
-  }, [filterAdmin]);
-
-  const fetchUsers = async (isInitial: boolean = false) => {
-    try {
-      setLoading(true);
-      
-      if (isInitial) {
-        setLastVisible(null);
-      }
-      
-      let queryConstraints = [];
-      queryConstraints.push(orderBy("createdAt"));
-      if (filterAdmin === "admin") {
-        queryConstraints.push(where("isAdmin", "==", true));
-      } else if (filterAdmin === "user") {
-        queryConstraints.push(where("isAdmin", "==", false));
-      }
-      queryConstraints.push(limit(ITEMS_PER_PAGE));
-      if (!isInitial && lastVisible) {
-        queryConstraints.push(startAfter(lastVisible));
-      }
-      const q = query(collection(db, "users"), ...queryConstraints);
-      const querySnapshot = await getDocs(q);
-      
-      if (querySnapshot.empty) {
-        setHasMore(false);
-        setLoading(false);
-        if (isInitial) {
-          setUsers([]);
-        }
-        return;
-      }
-      
-      const lastVisibleDoc = querySnapshot.docs[querySnapshot.docs.length - 1];
-      setLastVisible(lastVisibleDoc);
-      
-      const usersList = querySnapshot.docs.map(
-        (doc) => ({ uid: doc.id, ...doc.data() } as User)
-      );
-      
-      if (isInitial) {
-        setUsers(usersList);
-      } else {
-        setUsers(prev => [...prev, ...usersList]);
-      }
-      
-      setHasMore(querySnapshot.docs.length === ITEMS_PER_PAGE);
-    } catch (error) {
-      console.error("Error fetching users:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load users",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [fetchUsers, filterAdmin]);
 
   const handleRoleChange = async () => {
     if (!currentUserDetails) return;
@@ -203,7 +206,7 @@ const Users = () => {
     try {
       setLoading(true);
       
-      const filters: Record<string, any> = {};
+      const filters: Record<string, string> = {};
       if (filterRole !== "all") filters.role = filterRole;
       
       const result = await search<User>({
@@ -251,10 +254,8 @@ const Users = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Users</h1>
-        <p className="text-muted-foreground">
-          Manage user accounts and permissions
-        </p>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Users</h1>
+        <p className="text-gray-700 dark:text-gray-300">Manage all registered users and their roles</p>
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-4">

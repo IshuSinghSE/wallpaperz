@@ -116,10 +116,10 @@ const UserProfile = () => {
     <div className="space-y-6 animate-fade-in">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
             {isCurrentUser ? "My Profile" : `${userData?.displayName}'s Profile`}
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-gray-700 dark:text-gray-300">
             {isCurrentUser ? "Manage your profile and view your uploads" : "View user details and uploads"}
           </p>
         </div>
@@ -138,8 +138,8 @@ const UserProfile = () => {
         <TabsContent value="profile">
           <Card className="backdrop-blur-sm bg-white/10 dark:bg-slate-900/20 border border-white/20 dark:border-slate-800/50 shadow-xl">
             <CardHeader>
-              <CardTitle>{isCurrentUser ? "My Information" : "User Information"}</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-gray-900 dark:text-white">{isCurrentUser ? "My Information" : "User Information"}</CardTitle>
+              <CardDescription className="text-gray-700 dark:text-gray-300">
                 {isCurrentUser 
                   ? "Your personal information and profile settings" 
                   : "User's personal information and profile"}
@@ -285,10 +285,10 @@ const UserProfile = () => {
         <TabsContent value="wallpapers">
           <Card className="backdrop-blur-sm bg-white/10 dark:bg-slate-900/20 border border-white/20 dark:border-slate-800/50 shadow-xl overflow-hidden">
             <CardHeader>
-              <CardTitle>
+              <CardTitle className="text-gray-900 dark:text-white">
                 {isCurrentUser ? "My Wallpapers" : `${userData?.displayName}'s Wallpapers`}
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-gray-700 dark:text-gray-300">
                 {isCurrentUser 
                   ? "Wallpapers you have uploaded to the platform" 
                   : "Wallpapers uploaded by this user"}

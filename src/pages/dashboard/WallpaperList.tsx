@@ -172,10 +172,8 @@ const WallpaperList = () => {
     <div className="animate-fade-in space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold">Wallpapers</h1>
-          <p className="text-muted-foreground">
-            Manage your wallpaper collection
-          </p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Wallpapers</h1>
+          <p className="text-gray-700 dark:text-gray-300">Browse, search, and manage wallpapers</p>
         </div>
         <Button
           onClick={() => refresh()}
@@ -208,6 +206,13 @@ const WallpaperList = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
+            <Input
+              type="text"
+              placeholder="Search by name, tag, or author..."
+              className="pl-10 backdrop-blur-sm bg-white/10 border border-white/20 shadow-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           {searchTerm && (
             <Button
               type="button"
