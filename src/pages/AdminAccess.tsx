@@ -18,19 +18,22 @@ const AdminAccess = () => {
     e.preventDefault();
     setIsLoading(true);
 
+
     if (code === ADMIN_CODE) {
       // Store admin access in localStorage
       localStorage.setItem("adminAccess", "true");
       toast({
         title: "Access granted",
-        description: "Welcome to the admin area"
+        description: "Welcome to the admin area",
+        className: "bg-emerald-600 text-white dark:bg-emerald-700 dark:text-white"
       });
       navigate("/login");
     } else {
       toast({
         title: "Access denied",
         description: "Invalid admin code",
-        variant: "destructive"
+        variant: "destructive",
+        className: "bg-rose-600 text-white dark:bg-rose-700 dark:text-white"
       });
     }
 
@@ -38,14 +41,14 @@ const AdminAccess = () => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-dashboard-dark to-dashboard-purple-dark p-4">
-      <Card className="w-full max-w-md animate-scale-in">
+    <div className="flex min-h-screen items-center justify-center bg-neutral-100 dark:bg-neutral-900 p-4">
+      <Card className="w-full max-w-md animate-scale-in border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 shadow-xl dark:shadow-2xl">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
             <Lock className="h-6 w-6 text-primary" />
           </div>
-          <CardTitle className="text-2xl font-bold">Admin Access</CardTitle>
-          <p className="text-muted-foreground">
+          <CardTitle className="text-2xl font-bold text-gray-900 dark:text-gray-100">Admin Access</CardTitle>
+          <p className="text-gray-600 dark:text-gray-300">
             Enter the admin code to continue
           </p>
         </CardHeader>
@@ -58,13 +61,13 @@ const AdminAccess = () => {
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
                 maxLength={6}
-                className="text-center text-lg tracking-widest"
+                className="text-center text-lg tracking-widest text-gray-800 dark:text-gray-200"
                 required
               />
             </div>
             <Button
               type="submit"
-              className="w-full"
+              className="w-full "
               disabled={isLoading || code.length !== 6}
             >
               {isLoading ? "Verifying..." : "Access Admin"}

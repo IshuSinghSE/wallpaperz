@@ -55,11 +55,11 @@ const Login = () => {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-dashboard-dark to-dashboard-purple-dark p-4">
-      <div className="animate-scale-in w-full max-w-md rounded-lg border bg-background p-8 shadow-lg">
+    <div className="flex min-h-screen items-center justify-center bg-neutral-100 dark:bg-neutral-900 p-4">
+      <div className="animate-scale-in w-full max-w-md rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 p-8 shadow-xl dark:shadow-2xl">
         <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-foreground">Admin Panel</h1>
-          <p className="mt-2 text-muted-foreground">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Admin Panel</h1>
+          <p className="mt-2 text-gray-600 dark:text-gray-300">
             Sign in to access the wallpaper management dashboard
           </p>
         </div>
@@ -77,7 +77,7 @@ const Login = () => {
         <div className="flex flex-col space-y-4">
           <Button
             variant="outline"
-            className="flex w-full items-center justify-center gap-2 py-5"
+            className="flex w-full items-center justify-center gap-2 py-5 group transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
             onClick={handleGoogleSignIn}
             disabled={isLoading}
           >
@@ -107,11 +107,11 @@ const Login = () => {
                 />
               </svg>
             )}
-            <span className="ml-2">{isLoading ? "Signing In..." : "Sign in with Google"}</span>
+            <span className="ml-2 text-gray-900 dark:text-gray-100">{isLoading ? "Signing In..." : "Sign in with Google"}</span>
           </Button>
         </div>
 
-        <p className="mt-6 text-center text-sm text-muted-foreground">
+        <p className="mt-6 text-center text-sm text-gray-500 dark:text-gray-400">
           Only administrators are permitted to access this panel.
         </p>
       </div>

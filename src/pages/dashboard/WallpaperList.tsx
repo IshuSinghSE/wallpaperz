@@ -1,29 +1,36 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Wallpaper, WallpaperStatus } from "@/types";
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
-import { Check, X, Edit, Loader2, Search, RefreshCw } from '@/lib/icons';
+import { Check, X, Edit, Loader2, Search, RefreshCw } from "@/lib/icons";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { useWallpapers } from "@/hooks/use-wallpapers";
 import { Skeleton } from "@/components/ui/skeleton";
-import { collection, getDocs } from "firebase/firestore";
+import {
+  collection,
+  getDocs,
+  query,
+  where,
+  updateDoc,
+  doc,
+} from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 const WallpaperList = () => {
@@ -31,22 +38,25 @@ const WallpaperList = () => {
   const [categories, setCategories] = useState<string[]>([]);
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
   const { toast } = useToast();
+  const [pendingWallpapers, setPendingWallpapers] = useState<Wallpaper[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
 
-  const { 
-    wallpapers, 
-    isLoading, 
+  const {
+    wallpapers,
+    isLoading,
     isFetching,
-    hasMore, 
-    filterStatus, 
-    setFilterStatus, 
-    filterCategory, 
-    setFilterCategory, 
-    searchTerm, 
+    hasMore,
+    filterStatus,
+    setFilterStatus,
+    filterCategory,
+    setFilterCategory,
+    searchTerm,
     setSearchTerm,
     handleSearch,
     resetSearch,
     loadMore,
-    refresh
+    refresh,
   } = useWallpapers();
 
   useEffect(() => {
@@ -55,14 +65,16 @@ const WallpaperList = () => {
         setIsLoadingCategories(true);
         const categoriesQuery = collection(db, "categories");
         const categoriesSnapshot = await getDocs(categoriesQuery);
-        const categoriesData = categoriesSnapshot.docs.map(doc => doc.data().name);
+        const categoriesData = categoriesSnapshot.docs.map(
+          (doc) => doc.data().name
+        );
         setCategories(categoriesData);
       } catch (error) {
         console.error("Error fetching categories:", error);
         toast({
           title: "Error fetching categories",
           description: "Could not load categories. Please try again later.",
-          variant: "destructive"
+          variant: "destructive",
         });
       } finally {
         setIsLoadingCategories(false);
@@ -71,6 +83,66 @@ const WallpaperList = () => {
 
     fetchCategories();
   }, [toast]);
+
+  const handleStatusChange = async (id: string, status: WallpaperStatus) => {
+    try {
+      setProcessingIds((prev) => new Set(prev).add(id));
+
+      // Refresh wallpapers after status change so the UI updates
+      refresh();
+      await updateDoc(doc(db, "wallpapers", id), {
+        status: status,
+      });
+
+      // Update the local state
+      setPendingWallpapers((prevWallpapers) =>
+        prevWallpapers.filter((wallpaper) => wallpaper.id !== id)
+      );
+
+      toast({
+        title: `Wallpaper ${status}`,
+        description: `The wallpaper has been ${status}`,
+      });
+    } catch (error) {
+      console.error(`Error ${status} wallpaper:`, error);
+      toast({
+        title: "Error",
+        description: `Failed to ${status} wallpaper`,
+        variant: "destructive",
+      });
+    } finally {
+      setProcessingIds((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(id);
+        return newSet;
+      });
+    }
+  };
+
+  const isProcessing = (id: string) => processingIds.has(id);
+
+  // Track if a scroll-triggered fetch is in progress
+  const [isScrollFetching, setIsScrollFetching] = useState(false);
+
+  useEffect(() => {
+    if (!hasMore || isFetching || isScrollFetching) return;
+    const handleScroll = () => {
+      const trigger = document.getElementById("infinite-scroll-trigger");
+      if (!trigger) return;
+      const rect = trigger.getBoundingClientRect();
+      if (
+        rect.top < window.innerHeight + 100 &&
+        !isFetching &&
+        hasMore &&
+        !isScrollFetching
+      ) {
+        setIsScrollFetching(true);
+        Promise.resolve(loadMore()).finally(() => setIsScrollFetching(false));
+      }
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [isFetching, hasMore, loadMore, isScrollFetching]);
 
   const handleViewWallpaper = (id: string) => {
     navigate(`/dashboard/wallpapers/${id}`);
@@ -101,12 +173,14 @@ const WallpaperList = () => {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold">Wallpapers</h1>
-          <p className="text-muted-foreground">Manage your wallpaper collection</p>
+          <p className="text-muted-foreground">
+            Manage your wallpaper collection
+          </p>
         </div>
-        <Button 
-          onClick={() => refresh()} 
-          size="sm" 
-          variant="outline" 
+        <Button
+          onClick={() => refresh()}
+          size="sm"
+          variant="outline"
           disabled={isFetching}
           className="backdrop-blur-sm bg-white/10 border-white/20 shadow-lg"
         >
@@ -135,11 +209,11 @@ const WallpaperList = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
           {searchTerm && (
-            <Button 
-              type="button" 
-              variant="ghost" 
-              size="icon" 
-              className="absolute right-2 top-1/2 -translate-y-1/2" 
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="absolute right-2 top-1/2 -translate-y-1/2"
               onClick={resetSearch}
               aria-label="Clear search"
             >
@@ -152,7 +226,9 @@ const WallpaperList = () => {
           <div className="relative group">
             <Select
               value={filterStatus}
-              onValueChange={(value) => setFilterStatus(value as WallpaperStatus | "all")}
+              onValueChange={(value) =>
+                setFilterStatus(value as WallpaperStatus | "all")
+              }
               disabled={isLoading}
             >
               <SelectTrigger className="w-[180px] backdrop-blur-sm bg-white/10 border border-white/20 shadow-lg">
@@ -203,8 +279,8 @@ const WallpaperList = () => {
           {wallpapers.length > 0 ? (
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {wallpapers.map((wallpaper) => (
-                <Card 
-                  key={wallpaper.id} 
+                <Card
+                  key={wallpaper.id}
                   className="overflow-hidden shadow-xl border border-white/20 dark:border-slate-800/50 backdrop-blur-sm bg-white/10 dark:bg-slate-900/20 transition-all hover:scale-[1.02] hover:shadow-2xl hover:shadow-primary/10 cursor-pointer"
                   onClick={() => handleViewWallpaper(wallpaper.id)}
                 >
@@ -233,7 +309,7 @@ const WallpaperList = () => {
                   </CardHeader>
                   <CardContent className="p-4 pt-2 text-sm">
                     <div className="flex flex-wrap gap-1">
-                      {wallpaper.tags.slice(0, 3).map((tag, i) => (
+                      {wallpaper.tags.slice(0, 2).map((tag, i) => (
                         <span
                           key={i}
                           className="inline-block rounded-full bg-primary/10 backdrop-blur-sm px-2 py-1 text-xs"
@@ -241,34 +317,63 @@ const WallpaperList = () => {
                           {tag}
                         </span>
                       ))}
-                      {wallpaper.tags.length > 3 && (
+                      {wallpaper.tags.length > 2 && (
                         <span className="inline-block rounded-full bg-primary/10 backdrop-blur-sm px-2 py-1 text-xs">
-                          +{wallpaper.tags.length - 3} more
+                          +{wallpaper.tags.length - 2} more
                         </span>
                       )}
                     </div>
                   </CardContent>
-                  <CardFooter className="flex justify-between gap-2 p-4 pt-0" onClick={(e) => e.stopPropagation()}>
-                    <Button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleViewWallpaper(wallpaper.id);
-                      }}
-                      className="inline-flex h-9 items-center justify-center rounded-md bg-primary/80 backdrop-blur-sm px-3 text-sm font-medium text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:bg-primary focus-visible:outline-none focus-visible:ring-1"
-                    >
-                      <Edit className="mr-2 h-4 w-4" /> Edit
-                    </Button>
-                    {wallpaper.status === "pending" && (
-                      <div className="flex gap-2">
-                        <Button size="sm" variant="outline" className="flex-1 px-2 shadow-md backdrop-blur-sm bg-white/10 border-white/20">
-                          <Check className="mr-1 h-4 w-4 text-emerald-500" />{" "}
-                          Approve
+                  <CardFooter className="flex justify-between gap-2 p-4 pt-0">
+                    {wallpaper.status === "approved" ? (
+                      <Button
+                        variant="outline"
+                        className="flex-1"
+                        onClick={e => {
+                          e.stopPropagation();
+                          handleViewWallpaper(wallpaper.id);
+                        }}
+                      >
+                        View Details
+                      </Button>
+                    ) : (
+                      <>
+                        <Button
+                          variant="outline"
+                          className="flex-1 hover:dark:bg-green-950 hover:bg-green-50"
+                          onClick={e => {
+                            e.stopPropagation();
+                            handleStatusChange(wallpaper.id, "approved");
+                          }}
+                          disabled={isProcessing(wallpaper.id)}
+                        >
+                          {isProcessing(wallpaper.id) ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <>
+                              <Check className="mr-2 h-4 w-4 text-emerald-500" />
+                            </>
+                          )}
                         </Button>
-                        <Button size="sm" variant="outline" className="flex-1 px-2 shadow-md backdrop-blur-sm bg-white/10 border-white/20">
-                          <X className="mr-1 h-4 w-4 text-rose-500" />{" "}
-                          Reject
+
+                        <Button
+                          variant="outline"
+                          className="flex-1 hover:bg-red-50 hover:dark:bg-red-950"
+                          onClick={e => {
+                            e.stopPropagation();
+                            handleStatusChange(wallpaper.id, "rejected");
+                          }}
+                          disabled={isProcessing(wallpaper.id)}
+                        >
+                          {isProcessing(wallpaper.id) ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <>
+                              <X className="mr-2 h-4 w-4 text-rose-500" />
+                            </>
+                          )}
                         </Button>
-                      </div>
+                      </>
                     )}
                   </CardFooter>
                 </Card>
@@ -283,21 +388,8 @@ const WallpaperList = () => {
             </div>
           )}
 
-          {hasMore && (
-            <div className="mt-8 flex justify-center">
-              <Button
-                onClick={loadMore}
-                disabled={isFetching}
-                className="min-w-[200px] shadow-lg shadow-primary/10 backdrop-blur-sm bg-primary/80"
-              >
-                {isFetching ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  "Load More"
-                )}
-              </Button>
-            </div>
-          )}
+          {/* Infinite scroll trigger (no Load More button) */}
+          {hasMore && <div id="infinite-scroll-trigger" className="h-8" />}
         </>
       )}
     </div>
