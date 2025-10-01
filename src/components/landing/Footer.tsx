@@ -1,19 +1,20 @@
 import React, { memo } from 'react';
 import { Facebook, Instagram, Twitter } from '@/lib/icons';
+import AnimatedLogo from './AnimatedLogo';
 
 const Footer = memo(() => {
   return (
     <footer className="py-12 bg-dashboard-dark/80 border-t border-white/10">
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row md:justify-between items-center">
-          <div className="mb-6 md:mb-0">
-            <h2 className="text-2xl font-bold bg-gradient-to-r from-dashboard-purple-light to-dashboard-purple bg-clip-text text-transparent">
-              Bloomsplash
-            </h2>
+            <div className="md:scale-75 md:origin-left scale-105">
+              <AnimatedLogo />
+            </div>
+          {/* <div className="mb-6 md:mb-0">
             <p className="mt-2 text-sm text-gray-400">
               Explore, Create, Share Ultra 4K Wallpapers
             </p>
-          </div>
+          </div> */}
           
           <div className="flex flex-col md:flex-row items-center gap-4 md:gap-8">
             <a href="#" className="text-gray-400 hover:text-white transition">Home</a>

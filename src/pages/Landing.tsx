@@ -3,6 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Sparkles, Zap, Star, Circle } from "@/lib/icons";
+import DownloadButton from "@/components/landing/DownloadButton";
 
 // Lazy load components
 const DiagonalCarousel = lazy(() => import("@/components/landing/DiagonalCarousel"));
@@ -124,7 +125,7 @@ const Landing = () => {
                 {['4K Quality', 'Curated Collection', 'Regular Updates', 'Mobile Optimized'].map((feature, i) => (
                   <div 
                     key={feature}
-                    className="glass-card px-6 py-2 text-sm font-medium animate-fade-in"
+                    className="glass-card px-6 py-2 text-sm font-medium animate-fade-in hover:bg-purple-600 transition-all duration-500 ease-in"
                     style={{animationDelay: `${0.5 + i * 0.1}s`}}
                   >
                     {feature}
@@ -133,31 +134,7 @@ const Landing = () => {
               </div>
               
               {/* Download Button */}
-              <div className="flex justify-center animate-fade-in" style={{animationDelay: '0.9s'}}>
-                <a
-                  href="https://github.com/IshuSinghSE/bloomsplash/releases/latest"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="glass-card px-8 py-2 text-lg font-semibold text-white bg-gradient-to-r from-gradient-primary to-gradient-secondary hover:from-gradient-secondary hover:to-gradient-accent transition-all duration-300 transform hover:scale-105 hover:shadow-xl border border-primary/20 rounded-xl flex items-center gap-3"
-                >
-                  <svg 
-                    className="w-6 h-6" 
-                    fill="currentColor" 
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M12 2C6.48 2 2 6.48 2 12c0 4.42 2.87 8.17 6.84 9.49.5.09.68-.22.68-.48 0-.24-.01-.87-.01-1.71-2.78.6-3.37-1.34-3.37-1.34-.45-1.15-1.11-1.46-1.11-1.46-.91-.62.07-.61.07-.61 1.00.07 1.53 1.03 1.53 1.03.89 1.52 2.34 1.08 2.91.83.09-.65.35-1.08.63-1.33-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.10-.25-.45-1.27.10-2.65 0 0 .84-.27 2.75 1.02.80-.22 1.65-.33 2.50-.33.85 0 1.70.11 2.50.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.20 2.40.10 2.65.64.70 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85 0 1.34-.01 2.42-.01 2.75 0 .27.18.58.69.48C19.14 20.16 22 16.42 22 12c0-5.52-4.48-10-10-10z"/>
-                  </svg>
-                  Download APK
-                  <svg 
-                    className="w-5 h-5" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                </a>
-              </div>
+              <DownloadButton />
             </div>
           </div>
           
@@ -244,6 +221,10 @@ const Landing = () => {
                       <div className="text-sm text-muted-foreground uppercase tracking-wide">{stat.label}</div>
                     </div>
                   ))}
+                </div>
+                <div className="mt-12 flex justify-center">
+
+                <DownloadButton />
                 </div>
               </div>
             </div>
