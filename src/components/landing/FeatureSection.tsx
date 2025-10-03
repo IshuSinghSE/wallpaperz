@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from '@/lib/utils';
 import { Share, ImageIcon, Star } from '@/lib/icons';
@@ -35,8 +35,42 @@ const iconMap = {
 };
 
 const FeatureSection = () => {
+  const [visibleCards, setVisibleCards] = useState<boolean[]>(new Array(features.length).fill(false));
+  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  useEffect(() => {
+    const observers: IntersectionObserver[] = [];
+
+    cardRefs.current.forEach((ref, index) => {
+      if (ref) {
+        const observer = new IntersectionObserver(
+          ([entry]) => {
+            if (entry.isIntersecting) {
+              setVisibleCards(prev => {
+                const newState = [...prev];
+                newState[index] = true;
+                return newState;
+              });
+              observer.unobserve(ref);
+            }
+          },
+          {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+          }
+        );
+        observer.observe(ref);
+        observers.push(observer);
+      }
+    });
+
+    return () => {
+      observers.forEach(observer => observer.disconnect());
+    };
+  }, []);
+
   return (
-    <section className="py-20 relative" id="features">
+    <section className="py-20 mt-12 relative" id="features">
       <div className="container mx-auto px-4">
         <h2 className="text-3xl md:text-4xl font-bold mb-12 text-center text-gradient">
           Explore, Create, Share
@@ -47,12 +81,22 @@ const FeatureSection = () => {
             const IconComponent = iconMap[feature.icon as keyof typeof iconMap];
             return (
               <div 
-                key={index} 
-                className="animate-fade-in"
-                style={{ animationDelay: feature.delay }}
+                key={index}
+                ref={(el) => {
+                  cardRefs.current[index] = el;
+                }}
+                className={cn(
+                  "transition-all duration-700 ease-out",
+                  visibleCards[index] 
+                    ? "opacity-100 translate-y-0" 
+                    : "opacity-0 translate-y-8"
+                )}
+                style={{ 
+                  transitionDelay: visibleCards[index] ? `${index * 150}ms` : '0ms'
+                }}
               >
                 <Card className={cn(
-                  "glassmorphism border-white/10 overflow-hidden h-full", 
+                  "glassmorphism border-white/10 overflow-hidden h-full hover:scale-105 transition-transform duration-300", 
                   feature.className
                 )}>
                   <CardContent className="p-6 flex flex-col items-center text-center">
@@ -67,6 +111,7 @@ const FeatureSection = () => {
             );
           })}
         </div>
+       
       </div>
     </section>
   );
