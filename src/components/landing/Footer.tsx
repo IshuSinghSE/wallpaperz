@@ -25,15 +25,15 @@ const Footer = memo(() => {
           </div>
           
           <div className="mt-6 md:mt-0 flex gap-4">
-            <a href="#" className="text-gray-400 hover:text-white transition">
+            <a href="https://www.facebook.com/wthishu" className="text-gray-400 hover:text-white transition hover:-translate-y-1">
               <Facebook size={20} />
               <span className="sr-only">Facebook</span>
             </a>
-            <a href="#" className="text-gray-400 hover:text-white transition">
+            <a href="https://www.instagram.com/wth_ishu/" className="text-gray-400 hover:text-white transition  hover:-translate-y-1">
               <Instagram size={20} />
               <span className="sr-only">Instagram</span>
             </a>
-            <a href="#" className="text-gray-400 hover:text-white transition">
+            <a href="https://www.twitter.com/wth_ishu/" className="text-gray-400 hover:text-white transition  hover:-translate-y-1">
               <Twitter size={20} />
               <span className="sr-only">Twitter</span>
             </a>
